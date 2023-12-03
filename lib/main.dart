@@ -1,19 +1,24 @@
-import 'package:fit_match/responsive/mobile_screen_layout.dart';
+import 'package:fit_match/providers/get_jwt_token.dart';
 import 'package:fit_match/responsive/responsive_layout_screen.dart';
-import 'package:fit_match/responsive/web_screen_layout.dart';
-import 'package:fit_match/screens/other/login_screen.dart';
-import 'package:fit_match/screens/other/register_screen.dart';
-import 'package:fit_match/utils/colors.dart';
-import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'package:flutter/material.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+
+import 'package:fit_match/screens/shared/login_screen.dart';
+
+import 'package:fit_match/utils/colors.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  String? token = await getToken(); // Usa la función getToken()
+  runApp(MyApp(token: token));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? token; // Asegúrate de especificar el tipo
 
-  // This widget is the root of your application.
+  const MyApp({Key? key, required this.token}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -21,11 +26,11 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark()
           .copyWith(scaffoldBackgroundColor: mobileBackgroundColor),
-      /*home: const ResponsiveLayoutScreen(
-        movileScreenLayout: MobileScreenLayout(),
-        webScreenLayout: WebScreenLayout(),
-      ),*/
-      home: RegisterScreen(),
+      home: (token != null && !JwtDecoder.isExpired(token!))
+          ? ResponsiveLayout(
+              token: token!,
+            )
+          : LoginScreen(),
     );
   }
 }

@@ -1,47 +1,50 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
-class DatePicker extends StatelessWidget {
-  final TextEditingController dateController;
-  const DatePicker({Key? key, required this.dateController}) : super(key: key);
+class DatepickerWidget extends StatefulWidget {
+  final TextEditingController controller;
 
-  void selectDate(BuildContext context) async {
-    DateTime? pickedDate = await showDatePicker(
+  DatepickerWidget({Key? key, required this.controller}) : super(key: key);
+
+  @override
+  _DatepickerWidgetState createState() => _DatepickerWidgetState();
+}
+
+class _DatepickerWidgetState extends State<DatepickerWidget> {
+  DateTime selectedDate = DateTime.now();
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
     );
-
-    if (pickedDate != null && pickedDate != DateTime.now()) {
-      // Formatea la fecha y actualiza el controlador de texto
-      final formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-      dateController.text = formattedDate;
+    if (picked != null && picked != selectedDate) {
+      setState(() {
+        selectedDate = picked;
+        widget.controller.text = "${selectedDate.toLocal()}".split(' ')[0];
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return InkWell(
+      onTap: () => _selectDate(context),
+      child: Container(
+        padding: EdgeInsets.all(12.0),
+        child: Row(
           children: [
-            MaterialButton(
-              onPressed: () => selectDate(context),
-              color: blueColor,
-              child: const Text(
-                "Selecciona una fecha de nacimiento",
-                style:
-                    TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+            const Icon(Icons.calendar_today),
+            const SizedBox(width: 8.0),
+            Expanded(
+              child: TextFormField(
+                controller: widget.controller,
+                enabled: false,
+                decoration: const InputDecoration(
+                  hintText: "Seleccione tu fecha de nacimiento",
+                ),
               ),
-            ),
-            // Puedes agregar un TextField para mostrar la fecha seleccionada
-            TextField(
-              controller: dateController,
-              decoration:
-                  const InputDecoration(labelText: 'Fecha de nacimiento'),
             ),
           ],
         ),
