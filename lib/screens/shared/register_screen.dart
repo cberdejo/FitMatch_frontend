@@ -1,22 +1,13 @@
-import 'package:fit_match/utils/colors.dart';
-import 'package:fit_match/utils/dimensions.dart';
-import 'package:fit_match/utils/utils.dart';
-
-import 'package:fit_match/widget/date_picker.dart';
-import 'package:fit_match/widget/text_field_input.dart';
-
 import 'dart:typed_data';
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:email_auth/email_auth.dart';
 import 'package:image_picker/image_picker.dart';
-
-//import 'package:fit_match/responsive/mobile_screen_layout.dart';
-//import 'package:fit_match/responsive/responsive_layout_screen.dart';
-//import 'package:fit_match/responsive/web_screen_layout.dart';
-
-
+import 'package:fit_match/utils/colors.dart';
+import 'package:fit_match/utils/dimensions.dart';
+import 'package:fit_match/utils/utils.dart';
+import 'package:fit_match/widget/date_picker.dart';
+import 'package:fit_match/widget/text_field_input.dart';
 import 'package:fit_match/screens/shared/login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -27,13 +18,13 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _pswController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
-  final TextEditingController _otpController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _pswController = TextEditingController();
+  final _usernameController = TextEditingController();
+  final _dobController = TextEditingController();
+  final _otpController = TextEditingController();
 
-  final EmailAuth emailAuth = EmailAuth(sessionName: "Fit-Match");
+  final _emailAuth = EmailAuth(sessionName: "Fit-Match");
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
@@ -41,74 +32,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
-    super.dispose();
     _emailController.dispose();
     _pswController.dispose();
     _usernameController.dispose();
     _dobController.dispose();
     _otpController.dispose();
+    super.dispose();
   }
 
-  void sendOTP() async {
-    var res = await emailAuth.sendOtp(
+  Future<void> _sendOTP() async {
+    bool result = await _emailAuth.sendOtp(
         recipientMail: _emailController.text, otpLength: 6);
-    if (res) {
-      print("OTP sent successfully");
-    } else {
-      print("Failed to send OTP");
+    print(result ? "OTP sent successfully" : "Failed to send OTP");
+  }
+
+  Future<void> _verifyOTP() async {
+    bool result = await _emailAuth.validateOtp(
+        recipientMail: _emailController.text, userOtp: _otpController.text);
+    if (result) {
+      _signUpUser();
     }
   }
 
-  void verifyOTP() async {
-    var res = await emailAuth.validateOtp(
-        recipientMail: _emailController.text, userOtp: _otpController.text);
-    if (res) {
-      signUpUser();
-    } else {}
+  Future<void> _signUpUser() async {
+    setState(() => _isLoading = true);
+
+    // Implement signup logic here
+
+    setState(() => _isLoading = false);
   }
 
-  void signUpUser() async {
-    // set loading to true
-    setState(() {
-      _isLoading = true;
-    });
-
-    // signup user using our back express
-
-    // if string returned is sucess, user has been created
-    /* if () {
-      setState(() {
-        _isLoading = false;
-      });
-      
-      // navigate to the home screen
-      if (context.mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const ResponsiveLayout(
-              mobileScreenLayout: MobileScreenLayout(),
-              webScreenLayout: WebScreenLayout(),
-            ),
-          ),
-        );
-      }
-    } else {
-      setState(() {
-        _isLoading = false;
-      });
-      // show the error
-      if (context.mounted) {
-        showSnackBar(context, res);
-      }
-    } */
-  }
-
-  selectImage() async {
+  Future<void> _selectImage() async {
     Uint8List? im = await pickImage(ImageSource.gallery);
     if (im != null) {
-      setState(() {
-        _image = im;
-      });
+      setState(() => _image = im);
     }
   }
 
@@ -118,10 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Container(
-           padding: MediaQuery.of(context).size.width > webScreenSize
-              ? EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width / 3)
-              : const EdgeInsets.symmetric(horizontal: 32),
+          padding: _getHorizontalPadding(context),
           width: double.infinity,
           child: SingleChildScrollView(
             child: Form(
@@ -129,168 +83,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                
-                  const Text(
-                    'Bienvenido a Fit-Match',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  Image.asset(
-                    'assets/images/logo.png',
-                    color: primaryColor,
-                    height: 32,
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  const Text(
-                    'Para empezar a usar Fit-Match, rellena los siguientes datos ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 32,
-                  ),
-                  Stack(children: [
-                    _image != null
-                        ? CircleAvatar(
-                            radius: 64,
-                            backgroundImage: MemoryImage(_image!),
-                            backgroundColor: Colors.red,
-                          )
-                        : CircleAvatar(
-                            radius: 64,
-                            backgroundImage: Image.asset(
-                                    'assets/images/user_placeholder.png')
-                                .image,
-                            backgroundColor: Colors.red,
-                          ),
-                    Positioned(
-                      left: 80,
-                      child: IconButton(
-                          onPressed: selectImage,
-                          icon: const Icon(
-                            Icons.add_a_photo,
-                          )),
-                    )
-                  ]),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  TextFieldInput(
-                    textEditingController: _emailController,
-                    hintText: 'Escribe tu correo',
-                    textInputType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, ingresa tu correo';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  TextFieldInput(
-                    textEditingController: _pswController,
-                    hintText: 'Escribe tu contraseña',
-                    textInputType: TextInputType.text,
-                    isPsw: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, ingresa tu contraseña';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  TextFieldInput(
-                    textEditingController: _usernameController,
-                    hintText: 'Escribe tu nombre de usuario',
-                    textInputType: TextInputType.text,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Por favor, ingresa tu nombre de usuario';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  DatepickerWidget(
-                    controller: _dobController,
-                    //Validator
-                  ),
-                  const SizedBox(
-                    height: 24,
-                  ),
-                  InkWell(
-                    onTap: () {
-                      if (_formKey.currentState?.validate() ?? false) {
-                        sendOTP();
-                      }
-                    },
-                    child: Container(
-                        width: double.infinity,
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        decoration: const ShapeDecoration(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(4),
-                            ),
-                          ),
-                          color: blueColor,
-                        ),
-                        child: !_isLoading
-                            ? const Text(
-                                'Registrarse',
-                              )
-                            : const CircularProgressIndicator(
-                                color: primaryColor,
-                              )),
-                  ),
-                  const SizedBox(
-                    height: 12,
-                  ),
-
-                  
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: const Text(
-                          '¿Ya tienes cuenta?',
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () =>
-                            Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        )),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: const Text(' Iniciar sesión',
-                              style: TextStyle(
-                                  color: blueColor,
-                                  fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
+                  _buildTitle(),
+                  const SizedBox(height: 24),
+                  _buildLogo(),
+                  const SizedBox(height: 24),
+                  _buildDescription(),
+                  const SizedBox(height: 32),
+                  _buildImageSelector(),
+                  const SizedBox(height: 24),
+                  _buildEmailTextField(),
+                  const SizedBox(height: 24),
+                  _buildPasswordTextField(),
+                  const SizedBox(height: 24),
+                  _buildUsernameTextField(),
+                  const SizedBox(height: 24),
+                  DatepickerWidget(controller: _dobController),
+                  const SizedBox(height: 24),
+                  _buildRegisterButton(),
+                  const SizedBox(height: 12),
+                  _buildLoginOption(context),
                 ],
               ),
             ),
@@ -299,4 +110,110 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
   }
+
+  EdgeInsets _getHorizontalPadding(BuildContext context) =>
+      MediaQuery.of(context).size.width > webScreenSize
+          ? EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width / 3)
+          : const EdgeInsets.symmetric(horizontal: 32);
+
+  Widget _buildTitle() => const Text(
+        'Bienvenido a Fit-Match',
+        style: TextStyle(
+            fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
+      );
+
+  Widget _buildLogo() => Image.asset(
+        'assets/images/logo.png',
+        color: primaryColor,
+        height: 32,
+      );
+
+  Widget _buildDescription() => const Text(
+        'Para empezar a usar Fit-Match, rellena los siguientes datos ',
+        style: TextStyle(
+            fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+      );
+
+  Widget _buildImageSelector() => Stack(
+        children: [
+          CircleAvatar(
+            radius: 64,
+            backgroundImage: _image != null
+                ? MemoryImage(_image!)
+                : Image.asset('assets/images/user_placeholder.png').image,
+            backgroundColor: Colors.red,
+          ),
+          Positioned(
+            left: 80,
+            child: IconButton(
+                onPressed: _selectImage, icon: const Icon(Icons.add_a_photo)),
+          ),
+        ],
+      );
+
+  Widget _buildEmailTextField() => TextFieldInput(
+        textEditingController: _emailController,
+        hintText: 'Escribe tu correo',
+        textInputType: TextInputType.emailAddress,
+        validator: (value) => value == null || value.isEmpty
+            ? 'Por favor, ingresa tu correo'
+            : null,
+      );
+
+  Widget _buildPasswordTextField() => TextFieldInput(
+        textEditingController: _pswController,
+        hintText: 'Escribe tu contraseña',
+        textInputType: TextInputType.text,
+        isPsw: true,
+        validator: (value) => value == null || value.isEmpty
+            ? 'Por favor, ingresa tu contraseña'
+            : null,
+      );
+
+  Widget _buildUsernameTextField() => TextFieldInput(
+        textEditingController: _usernameController,
+        hintText: 'Escribe tu nombre de usuario',
+        textInputType: TextInputType.text,
+        validator: (value) => value == null || value.isEmpty
+            ? 'Por favor, ingresa tu nombre de usuario'
+            : null,
+      );
+
+  Widget _buildRegisterButton() => InkWell(
+        onTap: _sendOTP,
+        child: Container(
+          width: double.infinity,
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: const ShapeDecoration(
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(4))),
+            color: blueColor,
+          ),
+          child: _isLoading
+              ? const CircularProgressIndicator(color: primaryColor)
+              : const Text('Registrarse'),
+        ),
+      );
+
+  Widget _buildLoginOption(BuildContext context) => Wrap(
+        spacing: 100,
+        children: [
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Text('¿Ya tienes cuenta?'),
+          ),
+          GestureDetector(
+            onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const LoginScreen())),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(vertical: 8),
+              child: Text(' Iniciar sesión',
+                  style:
+                      TextStyle(color: blueColor, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
+      );
 }

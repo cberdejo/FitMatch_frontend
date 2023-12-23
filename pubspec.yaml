@@ -30,12 +30,17 @@ environment:
 dependencies:
   cupertino_icons: ^1.0.6
   email_auth: ^1.1.1
+  emoji_picker_flutter: ^1.6.3
   flutter:
     sdk: flutter
+  flutter_chat_ui: ^1.6.10
+  flutter_rating_bar: ^4.0.1
+  fluttertoast: ^8.2.4
   http: any
   image_picker: ^1.0.4
   intl: ^0.18.1
   jwt_decoder: ^2.0.1
+  like_button: ^2.0.5
   shared_preferences: ^2.2.2
 
 dev_dependencies:

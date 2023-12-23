@@ -5,6 +5,7 @@ class TextFieldInput extends StatelessWidget {
   final bool isPsw;
   final String hintText;
   final TextInputType textInputType;
+  final bool maxLine;
   final String? Function(String?)? validator;
 
   const TextFieldInput(
@@ -13,6 +14,7 @@ class TextFieldInput extends StatelessWidget {
       this.isPsw = false,
       required this.hintText,
       required this.textInputType,
+      this.maxLine = false,
       this.validator})
       : super(key: key);
 
@@ -21,6 +23,7 @@ class TextFieldInput extends StatelessWidget {
     final inputBorder = OutlineInputBorder(
       borderSide: Divider.createBorderSide(context),
     );
+
     return TextFormField(
       controller: textEditingController,
       decoration: InputDecoration(
@@ -29,8 +32,9 @@ class TextFieldInput extends StatelessWidget {
         focusedBorder: inputBorder,
         enabledBorder: inputBorder,
         filled: true,
-        contentPadding: EdgeInsets.all(8),
+        contentPadding: const EdgeInsets.all(8),
       ),
+      maxLines: maxLine ? null : 1,
       keyboardType: textInputType,
       obscureText: isPsw,
       validator: validator,

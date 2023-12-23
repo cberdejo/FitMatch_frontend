@@ -71,7 +71,7 @@ class _WebLayoutState extends State<WebLayout> {
             flex: 1,
             child: Container(
               width: 200,
-              color: mobileSearchColor,
+              color: webBackgroundColor,
               child: ListView(
                 children: [
                   const SizedBox(
@@ -104,53 +104,51 @@ class _WebLayoutState extends State<WebLayout> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Container(
-                    child: Column(
-                      children: [
-                        menuItem(
-                          Icons.home,
-                          'Inicio',
-                          0,
-                          (_page == 0) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.search,
-                          'Búsqueda',
-                          1,
-                          (_page == 1) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.message,
-                          'Chat',
-                          2,
-                          (_page == 2) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.favorite,
-                          'Notificaciones',
-                          3,
-                          (_page == 3) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.bookmark,
-                          'Guardados',
-                          4,
-                          (_page == 4) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.fitness_center,
-                          'Entrenamientos',
-                          5,
-                          (_page == 5) ? blueColor : Colors.grey,
-                        ),
-                        menuItem(
-                          Icons.person,
-                          'Perfil',
-                          6,
-                          (_page == 6) ? blueColor : Colors.grey,
-                        ),
-                      ],
-                    ),
+                  Column(
+                    children: [
+                      menuItem(
+                        Icons.home,
+                        'Inicio',
+                        0,
+                        (_page == 0) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.search,
+                        'Búsqueda',
+                        1,
+                        (_page == 1) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.message,
+                        'Chat',
+                        2,
+                        (_page == 2) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.favorite,
+                        'Notificaciones',
+                        3,
+                        (_page == 3) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.bookmark,
+                        'Guardados',
+                        4,
+                        (_page == 4) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.fitness_center,
+                        'Entrenamientos',
+                        5,
+                        (_page == 5) ? blueColor : Colors.grey,
+                      ),
+                      menuItem(
+                        Icons.person,
+                        'Perfil',
+                        6,
+                        (_page == 6) ? blueColor : Colors.grey,
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -158,12 +156,10 @@ class _WebLayoutState extends State<WebLayout> {
           ),
           Flexible(
             flex: 9,
-            child: Container(
-              child: PageView(
-                children: homeScreenItems,
-                controller: pageController,
-                onPageChanged: onPageChanged,
-              ),
+            child: PageView(
+              controller: pageController,
+              onPageChanged: onPageChanged,
+              children: homeScreenItems,
             ),
           ),
         ],

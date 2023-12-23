@@ -41,19 +41,17 @@ class _mobileLayout extends State<mobileLayout> {
     // Animating Page
     pageController.animateToPage(
       page,
-      duration: Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 500),
       curve: Curves.easeInOut,
     );
   }
 
-  BottomNavigationBarItem buildTabBarItem(
-      IconData icon, String label, int pageNumber) {
+  BottomNavigationBarItem buildTabBarItem(IconData icon, int pageNumber) {
     return BottomNavigationBarItem(
       icon: Icon(
         icon,
         color: (_page == pageNumber) ? blueColor : primaryColor,
       ),
-      label: label,
     );
   }
 
@@ -68,13 +66,13 @@ class _mobileLayout extends State<mobileLayout> {
         bottomNavigationBar: CupertinoTabBar(
           backgroundColor: mobileBackgroundColor,
           items: <BottomNavigationBarItem>[
-            buildTabBarItem(Icons.home, 'Inicio', 0),
-            buildTabBarItem(Icons.search, 'Búsqueda', 1),
-            buildTabBarItem(Icons.chat, 'Chat', 2),
-            buildTabBarItem(Icons.favorite, 'Notificaciones', 3),
-            buildTabBarItem(Icons.bookmark, 'Guardados', 4),
-            buildTabBarItem(Icons.fitness_center, 'Entrenamientos', 5),
-            buildTabBarItem(Icons.person, 'Perfil', 6),
+            buildTabBarItem(Icons.home, 0),
+            buildTabBarItem(Icons.search, 1),
+            buildTabBarItem(Icons.chat, 2),
+            buildTabBarItem(Icons.favorite, 3),
+            buildTabBarItem(Icons.bookmark, 4),
+            buildTabBarItem(Icons.fitness_center, 5),
+            buildTabBarItem(Icons.person, 6),
           ],
           onTap: navigationTapped,
           currentIndex: _page,

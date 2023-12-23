@@ -39,16 +39,14 @@ class _ResponsiveLayoutState extends State<ResponsiveLayout> {
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth > webScreenSize) {
-        return user != null
-            ? WebLayout(user: user)
-            : _buildLoadingOrErrorWidget();
+        return WebLayout(user: user);
       }
       return mobileLayout(user: user);
     });
   }
 
   Widget _buildLoadingOrErrorWidget() {
-    return Center(
+    return const Center(
       child: CircularProgressIndicator(),
     );
   }
