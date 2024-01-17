@@ -1,3 +1,4 @@
+import 'package:fit_match/services/review_service.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:intl/intl.dart';
@@ -11,16 +12,14 @@ import 'review/review_summary.dart';
 import 'star.dart';
 
 class PostCard extends StatefulWidget {
-  final Post post;
+  final PlantillaPost post;
   final int userId;
-  final int clientId;
 
-  const PostCard(
-      {Key? key,
-      required this.post,
-      required this.userId,
-      required this.clientId})
-      : super(key: key);
+  const PostCard({
+    Key? key,
+    required this.post,
+    required this.userId,
+  }) : super(key: key);
 
   @override
   _PostCardState createState() => _PostCardState();
@@ -28,11 +27,37 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   String _selectedOption = 'General';
+  bool _isLoading = true; // Indicador de carga
+  num _averageRating = 0; // Calificación promedio
+  List<Review> reviews = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReviewsAndCalculateRating();
+  }
+
+  void _loadReviewsAndCalculateRating() async {
+    // Mostrar el indicador de progreso
+    setState(() {
+      _isLoading = true;
+    });
+
+    List<Review> reviews = await getAllReviews(widget.post.templateId);
+
+    if (mounted) {
+      {
+        setState(() {
+          this.reviews = reviews;
+          _averageRating = calculateAverageRating(reviews);
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final formattedAverage =
-        NumberFormat("0.0").format(calculateAverageRating(widget.post.reviews));
     final width = MediaQuery.of(context).size.width;
 
     return SizedBox(
@@ -45,7 +70,7 @@ class _PostCardState extends State<PostCard> {
         child: Column(
           children: <Widget>[
             const SizedBox(height: 12),
-            _buildListTile(formattedAverage, width),
+            _buildListTile(width),
             const SizedBox(height: 12),
             _buildPostImage(width),
             const SizedBox(height: 12),
@@ -58,20 +83,23 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  ListTile _buildListTile(String formattedAverage, double width) {
+  ListTile _buildListTile(double width) {
     return ListTile(
-      title: Text(widget.post.username,
+      title: Text(widget.post.templateName,
           style: TextStyle(fontSize: width > webScreenSize ? 24 : 16)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(formattedAverage, style: const TextStyle(fontSize: 32)),
-          StarDisplay(
-              value: calculateAverageRating(widget.post.reviews),
-              size: width > webScreenSize ? 48 : 16),
-          const SizedBox(width: 5),
-        ],
-      ),
+      trailing: _isLoading
+          ? CircularProgressIndicator() // Muestra el indicador de progreso mientras los datos se están cargando
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(NumberFormat("0.0").format(_averageRating),
+                    style: const TextStyle(fontSize: 32)),
+                StarDisplay(
+                    value: _averageRating.round(),
+                    size: width > webScreenSize ? 48 : 16),
+                const SizedBox(width: 5),
+              ],
+            ),
     );
   }
 
@@ -81,7 +109,9 @@ class _PostCardState extends State<PostCard> {
       height: width > webScreenSize ? 500 : 250,
       decoration: BoxDecoration(
         border: Border.all(color: primaryColor, width: 2),
-        // Image code commented out
+      ),
+      child: Image.network(
+        widget.post.picture ?? '',
       ),
     );
   }
@@ -94,8 +124,9 @@ class _PostCardState extends State<PostCard> {
           padding: const EdgeInsets.all(4.0),
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              primary: _selectedOption == option ? blueColor : Colors.grey,
-              onPrimary: Colors.white,
+              foregroundColor: primaryColor,
+              backgroundColor:
+                  _selectedOption == option ? blueColor : Colors.grey,
             ),
             onPressed: () => _onSelectOption(option),
             child: Text(option),
@@ -110,6 +141,7 @@ class _PostCardState extends State<PostCard> {
       _selectedOption = option;
     });
   }
+  // Obtiene el mapa de secciones cada vez que se construye el widget
 
   Widget _buildContentBasedOnSelection() {
     switch (_selectedOption) {
@@ -122,40 +154,93 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
-  Column _buildGeneralContent() {
+  ///GENERAL
+
+  Widget _buildGeneralContent() {
+    var sectionsMap = widget.post.getSectionsMap();
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Sobre mí',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-        const SizedBox(height: 8),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 30.0),
-          child: ExpandableText(text: widget.post.description),
+        if (sectionsMap['Experiencia']!.isNotEmpty)
+          _buildChipsSection(
+              'Experiencia Recomendada', sectionsMap['Experiencia']!),
+        if (sectionsMap['Disciplinas']!.isNotEmpty)
+          _buildChipsSection('Disciplinas Usadas', sectionsMap['Disciplinas']!),
+        if (sectionsMap['Objetivos']!.isNotEmpty)
+          _buildChipsSection('Objetivos', sectionsMap['Objetivos']!),
+        if (sectionsMap['Equipamiento']!.isNotEmpty)
+          _buildChipsSection(
+              'Equipamiento Necesario', sectionsMap['Equipamiento']!),
+        _buildSectionTitle('Descripción'),
+        _buildSectionContent(widget.post.description ?? ''),
+      ],
+    );
+  }
+
+  Widget _buildSectionTitle(String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Text(
+        title,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+      ),
+    );
+  }
+
+  Widget _buildSectionContent(String content) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
+      child: ExpandableText(text: content),
+    );
+  }
+
+  Widget _buildChipsSection(String title, List<dynamic> chipsContent) {
+    List<Widget> chips = [];
+
+    // Itera sobre la lista dinámica y agrega un Chip solo para los elementos que son String
+    for (var content in chipsContent) {
+      if (content is String) {
+        chips.add(Chip(
+          label: Text(content),
+          backgroundColor: blueColor,
+        ));
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(title),
+        Wrap(
+          spacing: 8.0,
+          children: chips,
         ),
       ],
     );
   }
 
-  Column _buildReviewsContent() {
+//REVIEWS
+  Widget _buildReviewsContent() {
     return Column(
       children: [
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 30.0),
           child: ReviewSummaryWidget(
-              reviews: widget.post.reviews,
+              reviews: reviews,
               userId: widget.userId,
-              clientId: widget.clientId,
-              trainerId: widget.post.trainerId,
+              templateId: widget.post.templateId,
               onReviewAdded: (Review review) {
+                //se añade en local en vez de obtener todas de nuevo
                 setState(() {
-                  widget.post.reviews.add(review);
+                  reviews.add(review);
                 });
               }),
         ),
         Row(
           children: [
             const SizedBox(width: 24),
-            widget.post.reviews.length > 1
+            reviews.length > 1
                 ? TextButton(
                     onPressed: _showDialog,
                     child: const Text("Ver todas las reseñas"))
@@ -177,12 +262,11 @@ class _PostCardState extends State<PostCard> {
             children: [
               if (_selectedOption == 'Reviews')
                 ReviewListWidget(
-                    reviews: widget.post.reviews,
+                    reviews: reviews,
                     userId: widget.userId,
-                    clientId: widget.clientId,
                     onReviewDeleted: (int reviewId) {
                       setState(() {
-                        widget.post.reviews
+                        reviews
                             .removeWhere((item) => item.reviewId == reviewId);
                         showToast(context, 'Reseña elimianda con éxito');
                       });

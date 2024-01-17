@@ -1,3 +1,4 @@
+import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/widget/custom_toggle_button.dart';
 import 'package:fit_match/widget/text_field_input.dart';
 import 'package:flutter/material.dart';
@@ -12,14 +13,12 @@ import '../star.dart';
 class ReviewListWidget extends StatefulWidget {
   final List<Review> reviews;
   final int userId;
-  final int clientId;
   final Function onReviewDeleted; // Callback
 
   const ReviewListWidget(
       {Key? key,
       required this.reviews,
       required this.userId,
-      required this.clientId,
       required this.onReviewDeleted})
       : super(key: key);
 
@@ -34,6 +33,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   num? activeReviewId;
   num? activeCommentId;
   num? activeCommentRespondingId;
+  String selectedFilter = 'likes';
 
   @override
   void dispose() {
@@ -62,21 +62,23 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   }
 
   void _sortReviews(int index) {
-    switch (index) {
-      case 0: // Ordenar por 'Me Gusta'
-        widget.reviews
-            .sort((a, b) => b.meGusta.length.compareTo(a.meGusta.length));
-        break;
-      case 1: // Ordenar por 'Recientes'
-        widget.reviews.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-        break;
-      case 2: // Ordenar por 'Calificación Alta'
-        widget.reviews.sort((a, b) => b.rating.compareTo(a.rating));
-        break;
-      case 3: // Ordenar por 'Calificación Baja'
-        widget.reviews.sort((a, b) => a.rating.compareTo(b.rating));
-        break;
-    }
+    setState(() {
+      switch (index) {
+        case 0: // Ordenar por 'Me Gusta'
+          widget.reviews
+              .sort((a, b) => b.meGusta.length.compareTo(a.meGusta.length));
+          break;
+        case 1: // Ordenar por 'Recientes'
+          widget.reviews.sort((a, b) => b.timestamp.compareTo(a.timestamp));
+          break;
+        case 2: // Ordenar por 'Calificación Alta'
+          widget.reviews.sort((a, b) => b.rating.compareTo(a.rating));
+          break;
+        case 3: // Ordenar por 'Calificación Baja'
+          widget.reviews.sort((a, b) => a.rating.compareTo(b.rating));
+          break;
+      }
+    });
   }
 
   Future<void> _deleteComment(ComentarioReview comment) async {
@@ -85,7 +87,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       setState(() {
         widget.reviews
             .firstWhere((item) => item.reviewId == comment.reviewId)
-            .comentarios
+            .comentarioReview
             .removeWhere((item) => item.commentId == comment.commentId);
         showToast(context, 'Comentario eliminado');
       });
@@ -98,20 +100,51 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
     try {
       if (isLiked) {
         // Llamar al backend para quitar el 'me gusta'
-        MeGusta likeToDelete = await likeReview(widget.userId, review.reviewId);
+        MeGustaReviews likeToDelete =
+            await likeReview(widget.userId, review.reviewId);
 
         // Actualizar el estado con los nuevos 'me gusta' una vez confirmado
         setState(() {
-          review.meGusta
-              .removeWhere((item) => item.likedId == likeToDelete.likedId);
+          review.meGusta.removeWhere(
+              (item) => item.likedReviewId == likeToDelete.likedReviewId);
         });
       } else {
         // Llamar al backend para dar 'me gusta'
-        MeGusta like = await likeReview(widget.userId, review.reviewId);
+        MeGustaReviews like = await likeReview(widget.userId, review.reviewId);
 
         // Añadir el 'me gusta' a la lista localmente
         setState(() {
           review.meGusta.add(like);
+        });
+      }
+      return true;
+    } catch (e) {
+      print('Error al dar o quitar me gusta: $e');
+      return false;
+    }
+  }
+
+  Future<bool> handleLikeCommentButtonPress(
+      ComentarioReview comentario, bool isLiked) async {
+    try {
+      if (isLiked) {
+        // Llamar al backend para quitar el 'me gusta'
+        MeGustaComentarios likeToDelete =
+            await likeComment(widget.userId, comentario.commentId);
+
+        // Actualizar el estado con los nuevos 'me gusta' una vez confirmado
+        setState(() {
+          comentario.meGusta.removeWhere(
+              (item) => item.likedCommentId == likeToDelete.likedCommentId);
+        });
+      } else {
+        // Llamar al backend para dar 'me gusta'
+        MeGustaComentarios like =
+            await likeComment(widget.userId, comentario.commentId);
+
+        // Añadir el 'me gusta' a la lista localmente
+        setState(() {
+          comentario.meGusta.add(like);
         });
       }
       return true;
@@ -134,7 +167,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           await answerReview(userId, review.reviewId, answer);
 
       setState(() {
-        review.comentarios.add(comentarioReview);
+        review.comentarioReview.add(comentarioReview);
         showToast(context, 'Comentario añadido con éxito');
 
         activeReviewId = null;
@@ -162,7 +195,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           await answerComment(commentId, userId, review.reviewId, answer);
 
       setState(() {
-        review.comentarios.add(comentarioReview);
+        review.comentarioReview.add(comentarioReview);
         showToast(context, 'Comentario añadido con éxito');
       });
     } catch (e) {
@@ -185,14 +218,26 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        const Text('Reseñas',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
-        _buildFilterReviews(context),
-        const SizedBox(height: 8),
-        ...widget.reviews.map(_buildReviewItem).toList(),
-      ],
+    final width = MediaQuery.of(context).size.width;
+    return SingleChildScrollView(
+      scrollDirection: Axis.vertical, // Agregar scroll vertical
+      child: Column(
+        children: [
+          Column(
+            children: [
+              const Text('Reseñas',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
+              widget.reviews.length > 1
+                  ? (width < webScreenSize)
+                      ? _buildDropdownFilter()
+                      : _buildFilterReviews(context)
+                  : Container(),
+              const SizedBox(height: 8),
+              ...widget.reviews.map(_buildReviewItem).toList(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -217,6 +262,50 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
     );
   }
 
+  Widget _buildDropdownFilter() {
+    return Row(children: [
+      const Text('Ordenar por', style: TextStyle(fontSize: 16)),
+      const SizedBox(width: 8),
+      DropdownButton<String>(
+        value: selectedFilter,
+        onChanged: (value) {
+          if (value != null) {
+            setState(() {
+              selectedFilter = value;
+              if (value == 'likes') {
+                _sortReviews(0);
+              } else if (value == 'recent') {
+                _sortReviews(1);
+              } else if (value == 'highRating') {
+                _sortReviews(2);
+              } else if (value == 'lowRating') {
+                _sortReviews(3);
+              }
+            });
+          }
+        },
+        items: const [
+          DropdownMenuItem<String>(
+            value: 'likes',
+            child: Text('Me Gusta'),
+          ),
+          DropdownMenuItem<String>(
+            value: 'recent',
+            child: Text('Recientes'),
+          ),
+          DropdownMenuItem<String>(
+            value: 'highRating',
+            child: Text('Calificación Alta'),
+          ),
+          DropdownMenuItem<String>(
+            value: 'lowRating',
+            child: Text('Calificación Baja'),
+          ),
+        ],
+      )
+    ]);
+  }
+
   Widget _buildReviewItem(Review review) {
     commentsVisibility.putIfAbsent(review.reviewId, () => false);
 
@@ -229,7 +318,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
         _buildReviewActions(review),
         if (activeCommentId == review.reviewId) _buildResponderTextField(),
         if (commentsVisibility[review.reviewId] ?? false)
-          _buildCommentsSection(review.comentarios),
+          _buildCommentsSection(review.comentarioReview),
       ],
     );
   }
@@ -265,13 +354,13 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       children: [
         const SizedBox(width: 8),
         _likeButton(review),
-        if (review.comentarios.isNotEmpty)
+        if (review.comentarioReview.isNotEmpty)
           TextButton(
             onPressed: () => toggleCommentsVisibility(review.reviewId),
             child: Text(
                 commentsVisibility[review.reviewId]!
                     ? "Ocultar Respuestas"
-                    : "Ver ${review.comentarios.length} Respuestas",
+                    : "Ver ${review.comentarioReview.length} respuestas más",
                 style: const TextStyle(color: blueColor)),
           ),
         TextButton(
@@ -280,7 +369,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               activeCommentId == review.reviewId ? "Ocultar" : "Responder",
               style: const TextStyle(color: blueColor)),
         ),
-        if (review.clientId == widget.clientId)
+        if (review.userId == widget.userId)
           IconButton(
             icon: const Icon(Icons.delete),
             color: Colors.red,
@@ -328,21 +417,16 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           const SizedBox(height: 8),
           Row(
             children: [
-              TextButton(
-                onPressed: () =>
-                    onResponderCommentPressed(comentario.commentId),
-                child:
-                    const Text("Responder", style: TextStyle(color: blueColor)),
-              ),
-              IconButton(
-                icon: const Icon(Icons.delete),
-                color: Colors.red,
-                onPressed: () => _deleteComment(comentario),
-              ),
+              _likeComment(comentario),
+              comentario.userId == widget.userId
+                  ? IconButton(
+                      icon: const Icon(Icons.delete),
+                      color: Colors.red,
+                      onPressed: () => _deleteComment(comentario),
+                    )
+                  : const SizedBox.shrink(),
             ],
           ),
-          if (activeCommentRespondingId == comentario.commentId)
-            _buildResponderTextFieldForComment(comentario.commentId),
         ],
       ),
     );
@@ -357,6 +441,20 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       likeCount: review.meGusta.length,
       onTap: (bool isLiked) async {
         return await handleLikeButtonPress(review, isLiked);
+      },
+    );
+  }
+
+  Widget _likeComment(ComentarioReview comentario) {
+    bool isLiked =
+        comentario.meGusta.any((like) => like.userId == widget.userId);
+
+    return LikeButton(
+      size: 25,
+      isLiked: isLiked,
+      likeCount: comentario.meGusta.length,
+      onTap: (bool isLiked) async {
+        return await handleLikeCommentButtonPress(comentario, isLiked);
       },
     );
   }
@@ -385,35 +483,6 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           },
           child: const Text('Comentar', style: TextStyle(color: blueColor)),
         )
-      ],
-    );
-  }
-
-  Widget _buildResponderTextFieldForComment(num commentId) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextFieldInput(
-            textEditingController: _textController,
-            hintText: 'Escribe una respuesta...',
-            textInputType: TextInputType.multiline,
-            isPsw: false,
-            maxLine: true,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            if (activeReviewId != null) {
-              onAnswerComment(widget.userId, activeReviewId!, commentId,
-                  _textController.text);
-              _textController.clear();
-              setState(() {
-                activeCommentRespondingId = null;
-              });
-            }
-          },
-          child: const Text('Comentar', style: TextStyle(color: blueColor)),
-        ),
       ],
     );
   }

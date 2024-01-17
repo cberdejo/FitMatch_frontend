@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CustomShowModalBottomSheet extends StatelessWidget {
   final Widget child;
 
-  CustomShowModalBottomSheet({required this.child});
+  const CustomShowModalBottomSheet({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {

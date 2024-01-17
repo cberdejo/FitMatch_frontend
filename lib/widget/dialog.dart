@@ -5,7 +5,7 @@ class CustomDialog extends StatelessWidget {
   final Widget child;
   final VoidCallback onClose;
 
-  CustomDialog({required this.child, required this.onClose});
+  const CustomDialog({super.key, required this.child, required this.onClose});
 
   @override
   Widget build(BuildContext context) {

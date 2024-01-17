@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class DatepickerWidget extends StatefulWidget {
   final TextEditingController controller;
 
-  DatepickerWidget({Key? key, required this.controller}) : super(key: key);
+  const DatepickerWidget({Key? key, required this.controller}) : super(key: key);
 
   @override
   _DatepickerWidgetState createState() => _DatepickerWidgetState();
@@ -32,7 +32,7 @@ class _DatepickerWidgetState extends State<DatepickerWidget> {
     return InkWell(
       onTap: () => _selectDate(context),
       child: Container(
-        padding: EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(12.0),
         child: Row(
           children: [
             const Icon(Icons.calendar_today),

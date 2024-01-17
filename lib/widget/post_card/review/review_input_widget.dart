@@ -5,7 +5,8 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 class ReviewInputWidget extends StatefulWidget {
   final Future<void> Function(double rating, String reviewText) onReviewSubmit;
 
-  ReviewInputWidget({Key? key, required this.onReviewSubmit}) : super(key: key);
+  const ReviewInputWidget({Key? key, required this.onReviewSubmit})
+      : super(key: key);
 
   @override
   _ReviewInputWidgetState createState() => _ReviewInputWidgetState();

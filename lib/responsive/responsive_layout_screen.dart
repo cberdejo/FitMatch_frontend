@@ -1,53 +1,29 @@
 import 'package:fit_match/models/user.dart';
+import 'package:flutter/material.dart';
 import 'package:fit_match/responsive/mobile_layout.dart';
 import 'package:fit_match/responsive/web_layout.dart';
 import 'package:fit_match/utils/dimensions.dart';
-import 'package:flutter/material.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 class ResponsiveLayout extends StatefulWidget {
-  final String token;
+  final int initialPage;
+  final User user;
 
-  const ResponsiveLayout({
-    Key? key,
-    required this.token,
-  }) : super(key: key);
+  const ResponsiveLayout({Key? key, this.initialPage = 0, required this.user})
+      : super(key: key);
 
   @override
   State<ResponsiveLayout> createState() => _ResponsiveLayoutState();
 }
 
 class _ResponsiveLayoutState extends State<ResponsiveLayout> {
-  late User user;
-  @override
-  void initState() {
-    super.initState();
-    _initializeUser();
-  }
-
-  // Método asincrónico para inicializar el usuario
-  Future<void> _initializeUser() async {
-    try {
-      Map<String, dynamic> userData = JwtDecoder.decode(widget.token)['user'];
-      user = User.fromJson(userData);
-    } catch (e) {
-      print("Error al inicializar el usuario: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth > webScreenSize) {
-        return WebLayout(user: user);
+        return WebLayout(user: widget.user, initialPage: widget.initialPage);
       }
-      return mobileLayout(user: user);
-    });
-  }
 
-  Widget _buildLoadingOrErrorWidget() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+      return mobileLayout(user: widget.user, initialPage: widget.initialPage);
+    });
   }
 }

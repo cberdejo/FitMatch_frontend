@@ -9,23 +9,21 @@ import 'package:fit_match/widget/post_card/review/review_input_widget.dart';
 import 'package:fit_match/widget/post_card/review/review_list.dart';
 import 'package:fit_match/services/review_service.dart';
 
-import '../show_modal_bottom_sheet.dart';
+import '../../show_modal_bottom_sheet.dart';
 
 class ReviewSummaryWidget extends StatefulWidget {
   final List<Review> reviews;
   final Function onReviewAdded;
   final int userId;
-  final int clientId;
-  final int trainerId;
+  final int templateId;
 
-  const ReviewSummaryWidget(
-      {Key? key,
-      required this.reviews,
-      required this.userId,
-      required this.trainerId,
-      required this.onReviewAdded,
-      required this.clientId})
-      : super(key: key);
+  const ReviewSummaryWidget({
+    Key? key,
+    required this.reviews,
+    required this.userId,
+    required this.templateId,
+    required this.onReviewAdded,
+  }) : super(key: key);
 
   @override
   _ReviewSummaryWidgetState createState() => _ReviewSummaryWidgetState();
@@ -39,7 +37,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
         ReviewInputWidget(
           onReviewSubmit: (double rating, String reviewText) async {
             await onReviewSubmit(
-                widget.userId, widget.trainerId, rating, reviewText);
+                widget.userId, widget.templateId, rating, reviewText);
           },
         ),
       );
@@ -49,7 +47,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
         ReviewInputWidget(
           onReviewSubmit: (double rating, String reviewText) async {
             await onReviewSubmit(
-                widget.userId, widget.trainerId, rating, reviewText);
+                widget.userId, widget.templateId, rating, reviewText);
           },
         ),
         () => Navigator.of(context).pop(),
@@ -67,7 +65,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
   }
 
   Future<void> onReviewSubmit(
-      num userId, num trainerId, double rating, String reviewText) async {
+      num userId, num templateId, double rating, String reviewText) async {
     try {
       if (reviewText.isEmpty) {
         setState(() {
@@ -76,15 +74,19 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
         });
         (context, 'El contenido no puede ser vacío');
       }
-      Review review = await addReview(userId, trainerId, rating, reviewText);
+      Review review = await addReview(userId, templateId, rating, reviewText);
 
       setState(() {
         Navigator.pop(context);
         showToast(context, 'Reseña anadida con éxito');
+        widget.onReviewAdded(review);
       });
-      widget.onReviewAdded(review);
-    } catch (e) {
-      print('Error al añadir la review: $e');
+    } catch (error) {
+      setState(() {
+        print('Error al añadir la review: $error');
+        Navigator.pop(context);
+        showToast(context, 'Ha surgido un error', exitoso: false);
+      });
     }
   }
 
@@ -96,22 +98,29 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
     final maxCount = ratingCount.values
         .fold(0, (prev, element) => element > prev ? element : prev);
     final isReviewed =
-        widget.reviews.any((review) => review.clientId == widget.clientId);
+        widget.reviews.any((review) => review.userId == widget.userId);
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildReviewHeader(),
-          widget.reviews.isNotEmpty
-              ? _buildHistogramAndStars(
-                  ratingCount, maxCount, averageRating, width)
-              : Container(),
-          if (!isReviewed) _buildReviewButton(context, width),
-          const SizedBox(height: 16),
-          widget.reviews.isNotEmpty ? _buildReviewList() : Container(),
-        ],
-      ),
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // Usa constraints.maxWidth para obtener el ancho disponible
+        final width = constraints.maxWidth;
+
+        return SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildReviewHeader(),
+              widget.reviews.isNotEmpty
+                  ? _buildHistogramAndStars(
+                      ratingCount, maxCount, averageRating, width)
+                  : Container(),
+              if (!isReviewed) _buildReviewButton(context, width),
+              const SizedBox(height: 16),
+              widget.reviews.isNotEmpty ? _buildReviewList() : Container(),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -204,7 +213,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
   Widget _buildReviewList() {
     List<Review> filteredReviews = widget.reviews.isNotEmpty
         ? widget.reviews
-            .where((element) => element.clientId == widget.clientId)
+            .where((element) => element.userId == widget.userId)
             .toList()
         : [];
 
@@ -214,7 +223,6 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
                 ? [widget.reviews.first]
                 : filteredReviews,
             userId: widget.userId,
-            clientId: widget.clientId,
             onReviewDeleted: (int reviewId) {
               setState(() {
                 widget.reviews.removeWhere((item) => item.reviewId == reviewId);

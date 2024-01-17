@@ -6,6 +6,7 @@ class User {
   final String profile_picture;
   final DateTime birth; // Use the DateTime class here
   final num profile_id;
+  final bool public;
 
   User({
     required this.user_id,
@@ -15,6 +16,7 @@ class User {
     required this.profile_picture,
     required this.birth,
     required this.profile_id,
+    required this.public,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -24,9 +26,9 @@ class User {
       email: json['email'],
       password: json['password'],
       profile_picture: json['profile_picture'],
-      birth: DateTime.parse(
-          json['birth']), // Assuming 'birth' is a string in ISO 8601 format
+      birth: DateTime.parse(json['birth']), // ISO 8601
       profile_id: json['profile_id'],
+      public: json['public'],
     );
   }
 }
