@@ -6,6 +6,7 @@ import 'package:fit_match/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/services/plantilla_posts_service.dart';
 import 'package:fit_match/widget/post_card/post_card.dart';
+import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
 
 class ViewTrainersScreen extends StatefulWidget {
   final User user;
@@ -78,6 +79,15 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
     setState(() => isLoading = loading);
   }
 
+  Future<void> _handleRefresh() async {
+    setState(() {
+      currentPage = 1;
+      hasMore = true;
+      posts.clear();
+    });
+    await loadMorePosts();
+  }
+
   void _updatePostsList(List<PlantillaPost> newPosts) {
     setState(() {
       if (newPosts.isNotEmpty) {
@@ -116,21 +126,26 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
             width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
         child: Padding(
           padding: const EdgeInsets.only(top: 8.0),
-          child: ListView.builder(
-            itemCount: posts.length + (hasMore ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == posts.length) {
-                return hasMore
-                    ? const Center(child: CircularProgressIndicator())
-                    : const Text("Estás al día");
-              }
-              return Padding(
-                padding: const EdgeInsets.symmetric(vertical: 15.0),
-                child: PostCard(
-                    post: posts[index], userId: widget.user.user_id.toInt()),
-              );
-            },
-            controller: _scrollController,
+          child: LiquidPullToRefresh(
+            onRefresh: _handleRefresh,
+            backgroundColor: mobileBackgroundColor,
+            color: blueColor,
+            child: ListView.builder(
+              itemCount: posts.length + (hasMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index == posts.length) {
+                  return hasMore
+                      ? const Center(child: CircularProgressIndicator())
+                      : const Text("Estás al día");
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 15.0),
+                  child: PostCard(
+                      post: posts[index], userId: widget.user.user_id.toInt()),
+                );
+              },
+              controller: _scrollController,
+            ),
           ),
         ),
       ),

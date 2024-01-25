@@ -225,8 +225,6 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
         children: [
           Column(
             children: [
-              const Text('Reseñas',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24)),
               widget.reviews.length > 1
                   ? (width < webScreenSize)
                       ? _buildDropdownFilter()
@@ -309,17 +307,19 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   Widget _buildReviewItem(Review review) {
     commentsVisibility.putIfAbsent(review.reviewId, () => false);
 
-    return Column(
-      children: [
-        ListTile(
-          title: _buildReviewTitle(review),
-          subtitle: Text(review.reviewContent),
-        ),
-        _buildReviewActions(review),
-        if (activeCommentId == review.reviewId) _buildResponderTextField(),
-        if (commentsVisibility[review.reviewId] ?? false)
-          _buildCommentsSection(review.comentarioReview),
-      ],
+    return Card(
+      margin: const EdgeInsets.all(4.0),
+      child: Column(
+        children: [
+          ListTile(
+            title: _buildReviewTitle(review),
+          ),
+          _buildReviewActions(review),
+          if (activeCommentId == review.reviewId) _buildResponderTextField(),
+          if (commentsVisibility[review.reviewId] ?? false)
+            _buildCommentsSection(review.comentarioReview),
+        ],
+      ),
     );
   }
 
@@ -327,24 +327,41 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
     final formattedRating = NumberFormat("0.00").format(review.rating);
     final timeAgo = formatTimeAgo(review.timestamp);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        review.username.isNotEmpty
-            ? Text(review.username,
-                style: const TextStyle(
-                    fontSize: 16,
-                    color: primaryColor,
-                    fontWeight: FontWeight.bold))
-            : const Text('Cargando...', style: TextStyle(fontSize: 12)),
-        Row(
-          children: [
-            StarDisplay(value: review.rating, size: 20),
-            const SizedBox(width: 5),
-            Text('$formattedRating/5.0', style: const TextStyle(fontSize: 12)),
-            Text(' - $timeAgo', style: const TextStyle(fontSize: 12)),
-          ],
-        )
+        CircleAvatar(
+          backgroundImage: NetworkImage(review.profilePicture),
+          radius: 20,
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                children: [
+                  review.username.isNotEmpty
+                      ? Text(review.username,
+                          style: const TextStyle(
+                              fontSize: 14,
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold))
+                      : const Text('Cargando...',
+                          style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 5),
+                  Text('$formattedRating/5.0',
+                      style: const TextStyle(fontSize: 14)),
+                  Text(' - $timeAgo', style: const TextStyle(fontSize: 14)),
+                ],
+              ),
+              Text(review.reviewContent,
+                  style: const TextStyle(fontSize: 12),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -358,16 +375,20 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
           TextButton(
             onPressed: () => toggleCommentsVisibility(review.reviewId),
             child: Text(
-                commentsVisibility[review.reviewId]!
-                    ? "Ocultar Respuestas"
-                    : "Ver ${review.comentarioReview.length} respuestas más",
-                style: const TextStyle(color: blueColor)),
+              commentsVisibility[review.reviewId]!
+                  ? "Ocultar Respuestas"
+                  : "Ver ${review.comentarioReview.length} respuestas más",
+              style: const TextStyle(color: blueColor),
+              textScaler: const TextScaler.linear(0.8),
+            ),
           ),
         TextButton(
           onPressed: () => onResponderPressed(review.reviewId),
           child: Text(
-              activeCommentId == review.reviewId ? "Ocultar" : "Responder",
-              style: const TextStyle(color: blueColor)),
+            activeCommentId == review.reviewId ? "Ocultar" : "Responder",
+            style: const TextStyle(color: blueColor),
+            textScaler: const TextScaler.linear(0.8),
+          ),
         ),
         if (review.userId == widget.userId)
           IconButton(
@@ -460,30 +481,35 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   }
 
   Widget _buildResponderTextField() {
-    return Row(
-      children: [
-        Expanded(
-          // Envolver el TextFieldInput con Expanded
-          child: TextFieldInput(
-            textEditingController: _textController,
-            hintText: 'Escribe un comentario ...',
-            textInputType: TextInputType.multiline,
-            isPsw: false,
-            maxLine: true,
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Row(
+        children: [
+          const SizedBox(width: 8),
+          Expanded(
+            // Envolver el TextFieldInput con Expanded
+            child: TextFieldInput(
+              textEditingController: _textController,
+              hintText: 'Escribe un comentario ...',
+              textInputType: TextInputType.multiline,
+              isPsw: false,
+              maxLine: true,
+            ),
           ),
-        ),
-        TextButton(
-          onPressed: () {
-            if (activeReviewId != null) {
-              Review activeReview = widget.reviews
-                  .firstWhere((review) => review.reviewId == activeReviewId);
-              onAnswerReview(widget.userId, activeReview, _textController.text);
-              _textController.clear();
-            }
-          },
-          child: const Text('Comentar', style: TextStyle(color: blueColor)),
-        )
-      ],
+          TextButton(
+            onPressed: () {
+              if (activeReviewId != null) {
+                Review activeReview = widget.reviews
+                    .firstWhere((review) => review.reviewId == activeReviewId);
+                onAnswerReview(
+                    widget.userId, activeReview, _textController.text);
+                _textController.clear();
+              }
+            },
+            child: const Text('Comentar', style: TextStyle(color: blueColor)),
+          )
+        ],
+      ),
     );
   }
 }

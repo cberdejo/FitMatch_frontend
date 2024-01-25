@@ -19,6 +19,10 @@ const ejerciciosUrl = '${url}ejercicios';
 // Rutinas Guardadas (Saved Routines)
 const rutinasGuardadasUrl = '${url}rutinasGuardadas';
 
+//Rutinas Archivadas
+
+const rutinasArchivadasUrl = '${url}rutinasArchivadas';
+
 // Sesión de Entrenamiento de Entrada (Training Session Entry)
 const sesionEntrenamientoEntradaUrl = '${url}sesionEntrenamientoEntrada';
 

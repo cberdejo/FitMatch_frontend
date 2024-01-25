@@ -1,19 +1,72 @@
-class Ejercicio {
+class EjercicioDetallados {
+  final int detailedExerciseId;
+  final int sessionId;
+  final int exerciseId;
+  final int registerTypeId;
+  final String notes;
+  final int order;
+  final List<SetsEjerciciosEntrada> setsEjerciciosEntrada;
+
+  EjercicioDetallados({
+    required this.detailedExerciseId,
+    required this.sessionId,
+    required this.exerciseId,
+    required this.registerTypeId,
+    required this.notes,
+    required this.order,
+    required this.setsEjerciciosEntrada,
+  });
+
+  factory EjercicioDetallados.fromJson(Map<String, dynamic> json) {
+    return EjercicioDetallados(
+      detailedExerciseId: json['detailed_exercise_id'],
+      sessionId: json['session_id'],
+      exerciseId: json['exercise_id'],
+      registerTypeId: json['register_type_id'],
+      notes: json['notes'],
+      order: json['order'],
+      setsEjerciciosEntrada: (json['sets_ejercicios_entrada'] as List)
+          .map((set) => SetsEjerciciosEntrada.fromJson(set))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'detailed_exercise_id': detailedExerciseId,
+      'session_id': sessionId,
+      'exercise_id': exerciseId,
+      'register_type_id': registerTypeId,
+      'notes': notes,
+      'order': order,
+      'sets_ejercicios_entrada':
+          setsEjerciciosEntrada.map((set) => set.toJson()).toList(),
+    };
+  }
+}
+
+class Ejercicios {
   final int exerciseId;
   final String name;
   final String? description;
+  final int muscularGroupId;
+  final int? materialId;
 
-  Ejercicio({
+  Ejercicios({
     required this.exerciseId,
     required this.name,
     this.description,
+    required this.muscularGroupId,
+    this.materialId,
   });
 
-  factory Ejercicio.fromJson(Map<String, dynamic> json) {
-    return Ejercicio(
+  factory Ejercicios.fromJson(Map<String, dynamic> json) {
+    return Ejercicios(
       exerciseId: json['exercise_id'],
       name: json['name'],
       description: json['description'],
+      muscularGroupId: json['muscular_group_id'],
+      materialId: json['material_id'],
     );
   }
 
@@ -22,148 +75,106 @@ class Ejercicio {
       'exercise_id': exerciseId,
       'name': name,
       'description': description,
+      'muscular_group_id': muscularGroupId,
+      'material_id': materialId,
     };
   }
 }
 
-class EjercicioConDetalles {
-  final int detailedExerciseId;
-  final int exerciseId;
-  final int sessionId;
-  final String? notes;
-  final String? video;
-  final int? intensity;
-  final int? targetSets;
-  final int? targetReps;
-  final DateTime? targetTime;
-  final bool? armrap;
-
-  EjercicioConDetalles({
-    required this.detailedExerciseId,
-    required this.exerciseId,
-    required this.sessionId,
-    this.notes,
-    this.video,
-    this.intensity,
-    this.targetSets,
-    this.targetReps,
-    this.targetTime,
-    this.armrap,
-  });
-
-  factory EjercicioConDetalles.fromJson(Map<String, dynamic> json) {
-    return EjercicioConDetalles(
-      detailedExerciseId: json['detailed_exercise_id'] as int,
-      exerciseId: json['exercise_id'] as int,
-      sessionId: json['session_id'] as int,
-      notes: json['notes'] as String?,
-      video: json['video'] as String?,
-      intensity: json['intensity'] as int?,
-      targetSets: json['target_sets'] as int?,
-      targetReps: json['target_reps'] as int?,
-      targetTime: json.containsKey('target_time') && json['target_time'] != null
-          ? DateTime.parse(json['target_time'])
-          : null,
-      armrap: json['armrap'] as bool?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'detailed_exercise_id': detailedExerciseId,
-      'exercise_id': exerciseId,
-      'session_id': sessionId,
-      'notes': notes,
-      'video': video,
-      'intensity': intensity,
-      'target_sets': targetSets,
-      'target_reps': targetReps,
-      'target_time': targetTime?.toIso8601String(),
-      'armrap': armrap,
-    };
-  }
-}
-
-class EjercicioEntrada {
-  final int entryExerciseId;
-  final int entrySessionId;
-  final int detailedExerciseId;
-  final String? notes;
-  final List<SetEjercicioEntrada> sets;
-
-  EjercicioEntrada({
-    required this.entryExerciseId,
-    required this.entrySessionId,
-    required this.detailedExerciseId,
-    this.notes,
-    required this.sets,
-  });
-
-  factory EjercicioEntrada.fromJson(Map<String, dynamic> json) {
-    return EjercicioEntrada(
-      entryExerciseId: json['entry_exercise_id'] as int,
-      entrySessionId: json['entry_session_id'] as int,
-      detailedExerciseId: json['detailed_exercise_id'] as int,
-      notes: json['notes'] as String?,
-      sets: (json['sets'] as List<dynamic>)
-          .map((setJson) => SetEjercicioEntrada.fromJson(setJson))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'entry_exercise_id': entryExerciseId,
-      'entry_session_id': entrySessionId,
-      'detailed_exercise_id': detailedExerciseId,
-      'notes': notes,
-      'sets': sets.map((set) => set.toJson()).toList(),
-    };
-  }
-}
-
-class SetEjercicioEntrada {
+class SetsEjerciciosEntrada {
   final int setId;
-  final int entryExerciseId;
+  final int? detailedExerciseId;
   final int? setOrder;
-  final String? video;
   final int? reps;
-  final double? weight;
   final DateTime? time;
+  final double? weight;
+  final String? video;
 
-  SetEjercicioEntrada({
+  SetsEjerciciosEntrada({
     required this.setId,
-    required this.entryExerciseId,
+    this.detailedExerciseId,
     this.setOrder,
-    this.video,
     this.reps,
-    this.weight,
     this.time,
+    this.weight,
+    this.video,
   });
 
-  factory SetEjercicioEntrada.fromJson(Map<String, dynamic> json) {
-    return SetEjercicioEntrada(
-      setId: json['set_id'] as int,
-      entryExerciseId: json['entry_exercise_id'] as int,
-      setOrder: json['set_order'] as int?,
-      video: json['video'] as String?,
-      reps: json['reps'] as int?,
-      weight: json['weight'] as double,
-      time: json.containsKey('time') && json['time'] != null
-          ? DateTime.parse(json['time'])
-          : null,
+  factory SetsEjerciciosEntrada.fromJson(Map<String, dynamic> json) {
+    return SetsEjerciciosEntrada(
+      setId: json['set_id'],
+      detailedExerciseId: json['detailed_exercise_id'],
+      setOrder: json['set_order'],
+      reps: json['reps'],
+      time: DateTime.tryParse(json['time']),
+      weight: json['weight'],
+      video: json['video'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'set_id': setId,
-      'entry_exercise_id': entryExerciseId,
+      'detailed_exercise_id': detailedExerciseId,
       'set_order': setOrder,
-      'video': video,
       'reps': reps,
-      'weight': weight,
       'time': time?.toIso8601String(),
+      'weight': weight,
+      'video': video,
+    };
+  }
+}
+
+class TipoDeRegistro {
+  final int registerTypeId;
+  final String? name;
+
+  TipoDeRegistro({
+    required this.registerTypeId,
+    this.name,
+  });
+
+  factory TipoDeRegistro.fromJson(Map<String, dynamic> json) {
+    return TipoDeRegistro(
+      registerTypeId: json['register_type_id'],
+      name: json['name'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'register_type_id': registerTypeId,
+      'name': name,
+    };
+  }
+}
+
+class GrupoMuscular {
+  final int muscularGroupId;
+  final String? name;
+  final List<Ejercicios> ejercicios;
+
+  GrupoMuscular({
+    required this.muscularGroupId,
+    this.name,
+    required this.ejercicios,
+  });
+
+  factory GrupoMuscular.fromJson(Map<String, dynamic> json) {
+    return GrupoMuscular(
+      muscularGroupId: json['muscular_group_id'],
+      name: json['name'],
+      ejercicios: (json['ejercicios'] as List)
+          .map((ejercicio) => Ejercicios.fromJson(ejercicio))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'muscular_group_id': muscularGroupId,
+      'name': name,
+      'ejercicios': ejercicios.map((ejercicio) => ejercicio.toJson()).toList(),
     };
   }
 }

@@ -24,17 +24,28 @@ class _ReviewInputWidgetState extends State<ReviewInputWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(8),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildRatingBar(),
-          const SizedBox(height: 8),
-          _buildReviewTextField(),
-          const SizedBox(height: 8),
-          _buildSubmitButton(),
-        ],
+    // Usa MediaQuery para obtener la altura del teclado y ajustar el espacio inferior
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Escribe tu reseña'),
+      ),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: bottomPadding),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildRatingBar(),
+              const SizedBox(height: 20),
+              _buildReviewTextField(),
+              SizedBox(height: 20),
+              _buildSubmitButton(),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -64,12 +75,14 @@ class _ReviewInputWidgetState extends State<ReviewInputWidget> {
   }
 
   Widget _buildReviewTextField() {
-    return TextFieldInput(
-      textEditingController: _textController,
-      hintText: 'Escribe tu reseña aquí',
-      textInputType: TextInputType.multiline,
-      isPsw: false,
-      maxLine: true,
+    return TextField(
+      controller: _textController,
+      maxLines: null,
+      keyboardType: TextInputType.multiline,
+      decoration: const InputDecoration(
+        hintText: 'Escribe tu reseña aquí',
+        border: OutlineInputBorder(),
+      ),
     );
   }
 
@@ -78,9 +91,31 @@ class _ReviewInputWidgetState extends State<ReviewInputWidget> {
       onPressed: () async {
         if (_textController.text.trim().isNotEmpty) {
           await widget.onReviewSubmit(_currentRating, _textController.text);
-        } else {}
+          // Puedes cerrar la pantalla después de enviar la reseña si lo deseas
+          Navigator.pop(context);
+        }
       },
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size.fromHeight(
+            50), // Establece una altura mínima para el botón
+      ),
       child: const Text('Enviar Reseña'),
     );
   }
 }
+  /*
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+         
+        ],
+      ),
+    );
+  }
+  */
+

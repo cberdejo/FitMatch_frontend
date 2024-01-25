@@ -3,14 +3,16 @@ import 'package:fit_match/models/ejercicios.dart';
 class SesionEntrenamiento {
   final int sessionId;
   final int templateId;
-  final DateTime session_date;
+  final String sessionName;
+  final DateTime sessionDate;
   final String notes;
-  final List<EjercicioConDetalles> ejercicios;
+  final List<EjercicioDetallados> ejercicios;
 
   SesionEntrenamiento({
     required this.sessionId,
     required this.templateId,
-    required this.session_date,
+    required this.sessionDate,
+    required this.sessionName,
     required this.notes,
     required this.ejercicios,
   });
@@ -19,10 +21,11 @@ class SesionEntrenamiento {
     return SesionEntrenamiento(
       sessionId: json['session_id'],
       templateId: json['template_id'],
-      session_date: DateTime.parse(json['session_date']),
+      sessionDate: DateTime.parse(json['session_date']),
+      sessionName: json['session_name'],
       notes: json['notes'],
       ejercicios: (json['ejercicios'] as List)
-          .map((ejercicio) => EjercicioConDetalles.fromJson(ejercicio))
+          .map((ejercicio) => EjercicioDetallados.fromJson(ejercicio))
           .toList(),
     );
   }
@@ -31,7 +34,8 @@ class SesionEntrenamiento {
     return {
       'session_id': sessionId,
       'template_id': templateId,
-      'session_date': session_date.toIso8601String(),
+      'session_date': sessionDate.toIso8601String(),
+      'session_name': sessionName,
       'notes': notes,
       'ejercicios': ejercicios.map((ejercicio) => ejercicio.toJson()).toList(),
     };

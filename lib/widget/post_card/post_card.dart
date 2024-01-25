@@ -224,6 +224,23 @@ class _PostCardState extends State<PostCard> {
   Widget _buildReviewsContent() {
     return Column(
       children: [
+        Row(
+          children: [
+            const SizedBox(width: 24),
+            reviews.length > 1
+                ? TextButton(
+                    onPressed: _showDialog,
+                    style: ButtonStyle(
+                      foregroundColor:
+                          MaterialStateProperty.all<Color>(secondaryColor),
+                    ),
+                    child: const Text(
+                      "Ver todas las reseñas",
+                    ),
+                  )
+                : Container(),
+          ],
+        ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 30.0),
           child: ReviewSummaryWidget(
@@ -237,22 +254,12 @@ class _PostCardState extends State<PostCard> {
                 });
               }),
         ),
-        Row(
-          children: [
-            const SizedBox(width: 24),
-            reviews.length > 1
-                ? TextButton(
-                    onPressed: _showDialog,
-                    child: const Text("Ver todas las reseñas"))
-                : Container(),
-          ],
-        ),
       ],
     );
   }
 
   void _showDialog() {
-    showDialog(
+    showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
         return Dialog(

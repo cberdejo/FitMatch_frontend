@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:fit_match/models/sesion_entrenamiento.dart';
 import 'package:http/http.dart' as http;
 import 'package:fit_match/models/post.dart'; // Asegúrate de importar tu clase Post
 import 'package:fit_match/utils/backend_urls.dart';
@@ -38,7 +39,7 @@ class PlantillaPostsMethods {
     required num userId,
     required String templateName,
     required String description,
-    required Uint8List? picture,
+    Uint8List? picture,
     required List<Etiqueta> etiquetas,
   }) async {
     var request = http.MultipartRequest('POST', Uri.parse(plantillaPostsUrl));
@@ -78,14 +79,36 @@ class PlantillaPostsMethods {
     }
   }
 
-  Future<void> putPlantilla(PlantillaPost plantilla) async {
-    final response = await http.put(
-      Uri.parse('$plantillaPostsUrl/${plantilla.templateId}'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(plantilla.toJson()),
-    );
+  Future<int> updatePlantilla(
+      PlantillaPost plantilla, Uint8List? picture) async {
+    // Crear un MultipartRequest
+    var request = http.MultipartRequest(
+        'PUT', Uri.parse('$plantillaPostsUrl/${plantilla.templateId}'));
+
+    // Agregar campos de texto
+    request.fields['template_name'] = plantilla.templateName;
+    if (plantilla.description != null) {
+      request.fields['description'] = plantilla.description!;
+    }
+    request.fields['user_id'] = plantilla.userId.toString();
+    addEtiquetasToRequest(request, plantilla.etiquetas);
+
+    // Si se proporciona una imagen, inclúyela en el request
+    if (picture != null) {
+      var pictureStream = http.ByteStream(Stream.value(picture));
+      var pictureLength = picture.length;
+      var multipartFile = http.MultipartFile(
+          'picture', pictureStream, pictureLength,
+          filename: 'template_picture.jpg');
+      request.files.add(multipartFile);
+    }
+
+    // Enviar el request
+    var response = await request.send();
     if (response.statusCode == 200) {
-      print('Plantilla actualizada con éxito');
+      var responseBody = await response.stream.bytesToString();
+      var decodedResponse = jsonDecode(responseBody);
+      return decodedResponse['template_id'];
     } else {
       throw Exception(
           'Error al actualizar la plantilla. Código de estado: ${response.statusCode}');
@@ -133,6 +156,22 @@ class SesionEntrenamientoMethods {
           'Error al editar la sesión de entrenamiento. Código de estado: ${response.statusCode}');
     }
   }
+
+  Future<List<SesionEntrenamiento>> getSesionesEntrenamientoByTemplateId(
+      templateId) async {
+    final response = await http.get(
+      Uri.parse('$sesionEntrenamientoUrl?template_id=$templateId'),
+    );
+    if (response.statusCode == 200) {
+      final List<dynamic> jsonData = json.decode(response.body) as List;
+      return jsonData
+          .map((jsonItem) => SesionEntrenamiento.fromJson(jsonItem))
+          .toList();
+    } else {
+      throw Exception(
+          'Error al obtener los posts. Código de estado: ${response.statusCode}');
+    }
+  }
 }
 
 class EjerciciosMethods {
@@ -152,7 +191,7 @@ class EjerciciosMethods {
   }
 }
 
-class RutinaMethods {
+class RutinaGuardadaMethods {
   Future<void> createRutinaGuardada(int userId, int templateId) async {
     final response = await http.post(
       Uri.parse(rutinasGuardadasUrl),
@@ -177,11 +216,50 @@ class RutinaMethods {
     }
   }
 
-  Future<List<PlantillaPost>> getPlantillas(
-      num userId, int page, int pageSize) async {
+  Future<List<PlantillaPost>> getPlantillas(num userId) async {
     final response = await http.get(
-      Uri.parse(
-          '$rutinasGuardadasUrl?user_id=$userId&page=$page&pageSize=$pageSize'),
+      Uri.parse('$rutinasGuardadasUrl/$userId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+
+    if (response.statusCode == 200) {
+      List<dynamic> jsonResponse = jsonDecode(response.body);
+      return jsonResponse.map((json) => PlantillaPost.fromJson(json)).toList();
+    } else {
+      throw Exception(
+          'Error al obtener las plantillas. Código de estado: ${response.statusCode}');
+    }
+  }
+}
+
+class RutinasArchivadaMethods {
+  Future<void> createRutinaArchivada(int userId, int templateId) async {
+    final response = await http.post(
+      Uri.parse(rutinasArchivadasUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'user_id': userId,
+        'template_id': templateId,
+      }),
+    );
+    if (response.statusCode != 201) {
+      throw Exception(
+          'Error al archivar la rutina. Código de estado: ${response.statusCode}');
+    }
+  }
+
+  Future<void> deleteRutinaGuardada(int archivedId) async {
+    final response =
+        await http.delete(Uri.parse('$rutinasArchivadasUrl/$archivedId'));
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al archivar la rutina. Código de estado: ${response.statusCode}');
+    }
+  }
+
+  Future<List<PlantillaPost>> getPlantillas(num userId) async {
+    final response = await http.get(
+      Uri.parse('$rutinasArchivadasUrl/$userId'),
       headers: {'Content-Type': 'application/json'},
     );
 

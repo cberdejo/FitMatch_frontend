@@ -2,7 +2,7 @@ import 'package:fit_match/models/user.dart';
 import 'package:fit_match/screens/client/training/view_training_screen.dart';
 import 'package:fit_match/widget/preferences.dart';
 import 'package:fit_match/models/review.dart';
-import 'package:fit_match/screens/client/view_plantilla_screen.dart';
+import 'package:fit_match/screens/client/home/view_plantillas_post_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:fit_match/utils/colors.dart';

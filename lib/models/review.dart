@@ -6,6 +6,7 @@ class Review {
   final String reviewContent;
   final DateTime timestamp;
   final String username;
+  final String profilePicture;
   final List<ComentarioReview> comentarioReview;
   final List<MeGustaReviews> meGusta;
 
@@ -17,6 +18,7 @@ class Review {
     required this.reviewContent,
     required this.timestamp,
     required this.username,
+    required this.profilePicture,
     this.comentarioReview = const [],
     this.meGusta = const [],
   });
@@ -30,6 +32,7 @@ class Review {
       reviewContent: json['review_content'] as String,
       timestamp: DateTime.parse(json['timestamp'] as String),
       username: json['username'] as String,
+      profilePicture: json['profile_picture'] as String,
       comentarioReview: (json['comentario_review'] as List?)
               ?.map(
                   (comentarioJson) => ComentarioReview.fromJson(comentarioJson))
@@ -51,6 +54,7 @@ class Review {
       'review_content': reviewContent,
       'timestamp': timestamp.toIso8601String(),
       'username': username,
+      'profile_picture': profilePicture,
       'comentario_review':
           comentarioReview.map((comentario) => comentario.toJson()).toList(),
       'me_gusta_reviews': meGusta.map((mg) => mg.toJson()).toList(),
@@ -64,6 +68,7 @@ class ComentarioReview {
   final int reviewId;
   final num userId;
   final String username;
+  final String profilePicture;
   final String content;
   final DateTime timestamp;
   final List<MeGustaComentarios> meGusta;
@@ -75,6 +80,7 @@ class ComentarioReview {
     required this.content,
     required this.timestamp,
     required this.username,
+    required this.profilePicture,
     this.meGusta = const [],
   });
 
@@ -86,6 +92,7 @@ class ComentarioReview {
         content: json['content'] as String,
         timestamp: DateTime.parse(json['timestamp'] as String),
         username: json['username'] as String,
+        profilePicture: json['profile_picture'] as String,
         meGusta: (json['me_gusta_comentarios'] as List?)
                 ?.map((meGustaJson) => MeGustaComentarios.fromJson(meGustaJson))
                 .toList() ??
@@ -100,6 +107,7 @@ class ComentarioReview {
       'content': content,
       'timestamp': timestamp.toIso8601String(),
       'username': username,
+      'profile_picture': profilePicture,
       'me_gusta_comentarios': meGusta.map((mg) => mg.toJson()).toList(),
     };
   }
