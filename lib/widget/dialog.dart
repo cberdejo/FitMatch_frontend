@@ -1,4 +1,3 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomDialog extends StatelessWidget {
@@ -37,10 +36,9 @@ class CustomDialog extends StatelessWidget {
             top: -15.0,
             right: -15.0,
             child: CircleAvatar(
-              backgroundColor: Colors.red,
               radius: 15,
               child: IconButton(
-                icon: const Icon(Icons.close, size: 20.0, color: primaryColor),
+                icon: const Icon(Icons.close, size: 20.0),
                 onPressed: onClose,
                 padding: EdgeInsets.zero,
               ),

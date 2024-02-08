@@ -2,7 +2,6 @@ import 'package:fit_match/models/user.dart';
 import 'package:fit_match/providers/pageState.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:provider/provider.dart';
 
@@ -54,6 +53,9 @@ class _mobileLayout extends State<mobileLayout> {
   }
 
   Widget getProfileIcon(int pageNumber) {
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final secondaryColor = Theme.of(context).colorScheme.secondary;
+
     int _page = Provider.of<PageState>(context).currentPage;
 
     // Verificar si hay una imagen de perfil
@@ -66,7 +68,7 @@ class _mobileLayout extends State<mobileLayout> {
       // Ícono por defecto si no hay imagen de perfil
       return Icon(
         Icons.person,
-        color: _page == pageNumber ? blueColor : primaryColor,
+        color: _page == pageNumber ? primaryContainer : secondaryColor,
       );
     }
   }
@@ -77,6 +79,9 @@ class _mobileLayout extends State<mobileLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final secondaryColor = Theme.of(context).colorScheme.onSecondary;
     int _page = Provider.of<PageState>(context).currentPage;
 
     return Scaffold(
@@ -86,22 +91,23 @@ class _mobileLayout extends State<mobileLayout> {
           children: buildHomeScreenItems(widget.user),
         ),
         bottomNavigationBar: CupertinoTabBar(
-          backgroundColor: mobileBackgroundColor,
+          backgroundColor: primaryColor,
           items: <BottomNavigationBarItem>[
             buildTabBarItem(
-                Icon(Icons.home, color: _page == 0 ? blueColor : primaryColor),
+                Icon(Icons.home,
+                    color: _page == 0 ? primaryContainer : secondaryColor),
                 0),
             buildTabBarItem(
                 Icon(Icons.favorite,
-                    color: _page == 1 ? blueColor : primaryColor),
+                    color: _page == 1 ? primaryContainer : secondaryColor),
                 1),
             buildTabBarItem(
                 Icon(Icons.bookmark,
-                    color: _page == 2 ? blueColor : primaryColor),
+                    color: _page == 2 ? primaryContainer : secondaryColor),
                 2),
             buildTabBarItem(
                 Icon(Icons.fitness_center,
-                    color: _page == 3 ? blueColor : primaryColor),
+                    color: _page == 3 ? primaryContainer : secondaryColor),
                 3),
             buildTabBarItem(getProfileIcon(4), 4),
           ],

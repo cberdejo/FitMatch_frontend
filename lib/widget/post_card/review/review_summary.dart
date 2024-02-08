@@ -39,29 +39,6 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
     );
   }
 
-  /* if (width < webScreenSize) {
-      CustomShowModalBottomSheet.show(
-        context,
-        ReviewInputWidget(
-          onReviewSubmit: (double rating, String reviewText) async {
-            await onReviewSubmit(
-                widget.userId, widget.templateId, rating, reviewText);
-          },
-        ),
-      );
-    } else {
-      CustomDialog.show(
-        context,
-        ReviewInputWidget(
-          onReviewSubmit: (double rating, String reviewText) async {
-            await onReviewSubmit(
-                widget.userId, widget.templateId, rating, reviewText);
-          },
-        ),
-        () => Navigator.of(context).pop(),
-      );
-    }*/
-
   Map<int, int> _calculateRatingCount() {
     Map<int, int> ratingCount = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
     for (var review in widget.reviews) {
@@ -76,18 +53,17 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
     try {
       if (reviewText.isEmpty) {
         setState(() {
-          Navigator.pop(context);
-          showToast(context, 'El contenido no puede ser vacío');
+          showToast(context, 'El contenido no puede ser vacío', exitoso: false);
         });
-        (context, 'El contenido no puede ser vacío');
-      }
-      Review review = await addReview(userId, templateId, rating, reviewText);
+      } else {
+        Review review = await addReview(userId, templateId, rating, reviewText);
 
-      setState(() {
-        Navigator.pop(context);
-        showToast(context, 'Reseña anadida con éxito');
-        widget.onReviewAdded(review);
-      });
+        setState(() {
+          Navigator.pop(context);
+
+          widget.onReviewAdded(review);
+        });
+      }
     } catch (error) {
       setState(() {
         print('Error al añadir la review: $error');
@@ -99,7 +75,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
+    //final width = MediaQuery.of(context).size.width;
     final averageRating = calculateAverageRating(widget.reviews);
     final ratingCount = _calculateRatingCount();
     final maxCount = ratingCount.values
@@ -204,12 +180,20 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
   }
 
   Widget _buildReviewButton(BuildContext context, double width) {
-    return Center(
-      child: ElevatedButton.icon(
-        onPressed: () => _showReviewInput(context, width),
-        icon: const Icon(Icons.edit, color: blueColor),
-        label: const Text('Escribir una reseña',
-            style: TextStyle(color: blueColor)),
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Center(
+        child: ElevatedButton.icon(
+          icon: const Icon(Icons.edit),
+          label: const Text('Escribir una Reseña'),
+          onPressed: () => _showReviewInput(context, width),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: onPrimaryColor,
+          ),
+        ),
       ),
     );
   }
@@ -230,6 +214,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
             onReviewDeleted: (int reviewId) {
               setState(() {
                 widget.reviews.removeWhere((item) => item.reviewId == reviewId);
+                showToast(context, 'Reseña elimianda con éxito');
               });
             },
           )

@@ -1,4 +1,5 @@
 import 'package:fit_match/services/review_service.dart';
+import 'package:fit_match/widget/chip_section.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:intl/intl.dart';
@@ -56,28 +57,70 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
+  void _onSelectOption(String option) {
+    setState(() {
+      _selectedOption = option;
+    });
+  }
+
+  void _showReviews() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ReviewListWidget(
+            reviews: reviews,
+            userId: widget.userId,
+            fullScreen: true,
+            onReviewDeleted: (int reviewId) {
+              setState(() {
+                reviews.removeWhere((item) => item.reviewId == reviewId);
+                showToast(context, 'Reseña elimianda con éxito');
+              });
+            }),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
 
-    return SizedBox(
-      width: 400,
-      child: Card(
-        color:
-            width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
-        surfaceTintColor:
-            width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
-        child: Column(
-          children: <Widget>[
-            const SizedBox(height: 12),
-            _buildListTile(width),
-            const SizedBox(height: 12),
-            _buildPostImage(width),
-            const SizedBox(height: 12),
-            _buildSelectButtons(),
-            const SizedBox(height: 12),
-            _buildContentBasedOnSelection(),
-          ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Plantilla de entrenamiento"),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ),
+      body: Center(
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Card(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Column(children: [
+                        const SizedBox(height: 12),
+                        _buildListTile(width),
+                        const SizedBox(height: 12),
+                        _buildPostImage(width),
+                        const SizedBox(height: 12),
+                        _buildSelectButtons(),
+                      ]),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildContentBasedOnSelection(width),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -88,9 +131,8 @@ class _PostCardState extends State<PostCard> {
       title: Text(widget.post.templateName,
           style: TextStyle(fontSize: width > webScreenSize ? 24 : 16)),
       trailing: _isLoading
-          ? CircularProgressIndicator() // Muestra el indicador de progreso mientras los datos se están cargando
-          : Row(
-              mainAxisSize: MainAxisSize.min,
+          ? const CircularProgressIndicator() // Muestra el indicador de progreso mientras los datos se están cargando
+          : Wrap(
               children: [
                 Text(NumberFormat("0.0").format(_averageRating),
                     style: const TextStyle(fontSize: 32)),
@@ -117,38 +159,41 @@ class _PostCardState extends State<PostCard> {
   }
 
   Widget _buildSelectButtons() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: ['General', 'Reviews', 'Información'].map((option) {
-        return Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              foregroundColor: primaryColor,
-              backgroundColor:
-                  _selectedOption == option ? blueColor : Colors.grey,
+      children: ['General', 'Reseñas', 'Info'].map((option) {
+        return Expanded(
+          child: Padding(
+            padding: const EdgeInsets.all(4.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                foregroundColor: primaryColor,
+                backgroundColor:
+                    _selectedOption == option ? primaryColor : Colors.grey,
+              ),
+              onPressed: () => _onSelectOption(option),
+              child: Text(
+                option,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(color: onPrimaryColor),
+              ),
             ),
-            onPressed: () => _onSelectOption(option),
-            child: Text(option),
           ),
         );
       }).toList(),
     );
   }
 
-  void _onSelectOption(String option) {
-    setState(() {
-      _selectedOption = option;
-    });
-  }
   // Obtiene el mapa de secciones cada vez que se construye el widget
 
-  Widget _buildContentBasedOnSelection() {
+  Widget _buildContentBasedOnSelection(num width) {
     switch (_selectedOption) {
       case 'General':
         return _buildGeneralContent();
-      case 'Reviews':
-        return _buildReviewsContent();
+      case 'Reseñas':
+        return _buildReviewsContent(width);
       default:
         return Container(); // Placeholder for 'Información' content
     }
@@ -163,28 +208,20 @@ class _PostCardState extends State<PostCard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (sectionsMap['Experiencia']!.isNotEmpty)
-          _buildChipsSection(
+          buildChipsSection(
               'Experiencia Recomendada', sectionsMap['Experiencia']!),
         if (sectionsMap['Disciplinas']!.isNotEmpty)
-          _buildChipsSection('Disciplinas Usadas', sectionsMap['Disciplinas']!),
+          buildChipsSection('Disciplinas Usadas', sectionsMap['Disciplinas']!),
         if (sectionsMap['Objetivos']!.isNotEmpty)
-          _buildChipsSection('Objetivos', sectionsMap['Objetivos']!),
+          buildChipsSection('Objetivos', sectionsMap['Objetivos']!),
         if (sectionsMap['Equipamiento']!.isNotEmpty)
-          _buildChipsSection(
+          buildChipsSection(
               'Equipamiento Necesario', sectionsMap['Equipamiento']!),
-        _buildSectionTitle('Descripción'),
+        if (sectionsMap['Duracion']!.isNotEmpty)
+          buildChipsSection('Duración', sectionsMap['Duracion']!),
+        buildSectionTitle('Descripción'),
         _buildSectionContent(widget.post.description ?? ''),
       ],
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-      ),
     );
   }
 
@@ -195,47 +232,28 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
-  Widget _buildChipsSection(String title, List<dynamic> chipsContent) {
-    List<Widget> chips = [];
-
-    // Itera sobre la lista dinámica y agrega un Chip solo para los elementos que son String
-    for (var content in chipsContent) {
-      if (content is String) {
-        chips.add(Chip(
-          label: Text(content),
-          backgroundColor: blueColor,
-        ));
-      }
-    }
-
+//REVIEWS
+  Widget _buildReviewsContent(num width) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(title),
         Wrap(
-          spacing: 8.0,
-          children: chips,
-        ),
-      ],
-    );
-  }
-
-//REVIEWS
-  Widget _buildReviewsContent() {
-    return Column(
-      children: [
-        Row(
           children: [
             const SizedBox(width: 24),
             reviews.length > 1
                 ? TextButton(
-                    onPressed: _showDialog,
+                    onPressed: _showReviews,
                     style: ButtonStyle(
                       foregroundColor:
                           MaterialStateProperty.all<Color>(secondaryColor),
                     ),
-                    child: const Text(
+                    child: Text(
                       "Ver todas las reseñas",
+                      style:
+                          const TextStyle(color: secondaryColor, fontSize: 14),
+                      textScaler: width < webScreenSize
+                          ? const TextScaler.linear(0.9)
+                          : const TextScaler.linear(1.2),
                     ),
                   )
                 : Container(),
@@ -251,46 +269,11 @@ class _PostCardState extends State<PostCard> {
                 //se añade en local en vez de obtener todas de nuevo
                 setState(() {
                   reviews.add(review);
+                  showToast(context, 'Reseña anadida con exito');
                 });
               }),
         ),
       ],
-    );
-  }
-
-  void _showDialog() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topRight,
-            children: [
-              if (_selectedOption == 'Reviews')
-                ReviewListWidget(
-                    reviews: reviews,
-                    userId: widget.userId,
-                    onReviewDeleted: (int reviewId) {
-                      setState(() {
-                        reviews
-                            .removeWhere((item) => item.reviewId == reviewId);
-                        showToast(context, 'Reseña elimianda con éxito');
-                      });
-                    }),
-              // Placeholder for 'Información' content
-              Positioned(
-                right: -10.0,
-                top: -10.0,
-                child: IconButton(
-                  icon: const Icon(Icons.close, size: 30.0),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 }

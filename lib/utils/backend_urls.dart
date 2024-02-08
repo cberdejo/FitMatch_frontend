@@ -13,15 +13,26 @@ const plantillaPostsUrl = '${url}plantillaPosts';
 // Sesión de Entrenamiento (Training Session)
 const sesionEntrenamientoUrl = '${url}sesionEntrenamiento';
 
+// Sesión de Entrenamiento (Training Session) Para obtener las sesiones de una plantilla de entrenamiento (training template)
+const sesionEntrenamientoTemplateUrl = '${url}sesionEntrenamientoTemplate';
+
 // Ejercicios (Exercises)
 const ejerciciosUrl = '${url}ejercicios';
 
+// Grupos Musculares
+const grupoMuscularesUrl = '${url}grupoMuscular';
+// Material
+const materialUrl = '${url}material';
+//Tipo de registro
+const tipoRegistroUrl = '${url}tipoRegistro';
 // Rutinas Guardadas (Saved Routines)
 const rutinasGuardadasUrl = '${url}rutinasGuardadas';
 
 //Rutinas Archivadas
-
 const rutinasArchivadasUrl = '${url}rutinasArchivadas';
+
+// Ejercicios detallados agrupados
+const groupedExercisesUrl = '${url}ejerciciosDetalladosAgrupados';
 
 // Sesión de Entrenamiento de Entrada (Training Session Entry)
 const sesionEntrenamientoEntradaUrl = '${url}sesionEntrenamientoEntrada';

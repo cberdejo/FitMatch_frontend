@@ -1,26 +1,29 @@
 import 'package:fit_match/providers/pageState.dart';
+import 'package:fit_match/providers/theme_provider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/providers/get_jwt_token.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:fit_match/responsive/responsive_layout_screen.dart';
 import 'package:fit_match/screens/shared/login_screen.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   String? token = await getToken(); // Obtener el token JWT
-
+  await ThemeProvider.instance.changeTheme(ThemeEnum.Dark);
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => PageState()),
-  ], child: MyApp(token: token)));
+    ChangeNotifierProvider(create: (_) => ThemeProvider.instance),
+  ], child: MyApp(token: token, theme: ThemeData())));
 }
 
 class MyApp extends StatelessWidget {
   final String? token;
+  final ThemeData theme;
 
-  const MyApp({Key? key, this.token}) : super(key: key);
+  const MyApp({Key? key, this.token, required this.theme}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     User user = User(
@@ -50,12 +53,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Fit-Match',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: mobileBackgroundColor,
-      ),
+      theme: Provider.of<ThemeProvider>(context).currentThemeData,
       home: token != null && JwtDecoder.isExpired(token!) == false
           ? ResponsiveLayout(user: user)
-          : LoginScreen(),
+          : const LoginScreen(),
     );
   }
 }

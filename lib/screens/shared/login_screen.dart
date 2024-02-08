@@ -1,10 +1,11 @@
 import 'package:fit_match/models/user.dart';
+import 'package:fit_match/providers/theme_provider.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/widget/text_field_input.dart';
 import 'package:fit_match/services/auth_service.dart';
 import 'package:fit_match/screens/shared/register_screen.dart';
@@ -53,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _navigateToHome();
       } else {
         print("Error de autenticación: $result");
+        showToast(context, "Error de autenticación: $result", exitoso: false);
       }
     } catch (error) {
       print("Error inesperado: $error");
@@ -131,13 +133,15 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget _buildTitle() => const Text(
         'Bienvenido a Fit-Match',
         style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
+        ),
       );
 
   Widget _buildLogo() => Image.asset(
         'assets/images/logo.png',
-        color: primaryColor,
         height: 128,
+        color: Theme.of(context).colorScheme.primary,
       );
 
   Widget _buildEmailTextField() => TextFieldInput(
@@ -168,11 +172,12 @@ class _LoginScreenState extends State<LoginScreen> {
           GestureDetector(
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => const RegisterScreen())),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(' Registrate aquí',
-                  style:
-                      TextStyle(color: blueColor, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary)),
             ),
           ),
         ],

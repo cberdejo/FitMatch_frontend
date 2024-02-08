@@ -1,8 +1,7 @@
 import 'package:fit_match/models/post.dart';
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/utils/colors.dart';
-import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
+import 'package:fit_match/widget/post_card/preview_post_card.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/services/plantilla_posts_service.dart';
 import 'package:fit_match/widget/post_card/post_card.dart';
@@ -59,9 +58,17 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
       // Obtener nuevos posts.
       var newPosts = await PlantillaPostsMethods()
           .getAllPosts(page: currentPage, pageSize: pageSize);
-
+      if (newPosts.isEmpty) {
+        setState(() {
+          hasMore = false;
+          showToast(
+            context,
+            "No hay mas rutinas disponibles.",
+          );
+        });
+      }
       // Actualizar la lista de posts y el estado si el componente sigue montado.
-      if (mounted) {
+      else if (mounted) {
         _updatePostsList(newPosts);
       }
     } catch (e) {
@@ -109,44 +116,45 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
     print(error);
   }
 
+  void _showPost(PlantillaPost post) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) =>
+            PostCard(post: post, userId: widget.user.user_id.toInt())));
+  }
+
   //SCREEN
 
   @override
   Widget build(BuildContext context) {
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor:
-            width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
         title: const Text("Filtros por terminar"),
       ),
-      body: Container(
-        color:
-            width > webScreenSize ? webBackgroundColor : mobileBackgroundColor,
-        child: Padding(
-          padding: const EdgeInsets.only(top: 8.0),
-          child: LiquidPullToRefresh(
-            onRefresh: _handleRefresh,
-            backgroundColor: mobileBackgroundColor,
-            color: blueColor,
-            child: ListView.builder(
-              itemCount: posts.length + (hasMore ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (index == posts.length) {
-                  return hasMore
-                      ? const Center(child: CircularProgressIndicator())
-                      : const Text("Estás al día");
-                }
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 15.0),
-                  child: PostCard(
-                      post: posts[index], userId: widget.user.user_id.toInt()),
-                );
-              },
-              controller: _scrollController,
-            ),
-          ),
+      body: LiquidPullToRefresh(
+        onRefresh: _handleRefresh,
+        color: primaryContainer,
+        child: ListView.builder(
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: posts.length + (hasMore ? 1 : 0),
+          itemBuilder: (context, index) {
+            if (index == posts.length) {
+              return hasMore
+                  ? const Center(child: CircularProgressIndicator())
+                  : const Text("Estás al día");
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 15.0),
+              child: buildPostItem(
+                posts[index],
+                width,
+                showPost: () => _showPost(posts[index]),
+              ),
+            );
+          },
+          controller: _scrollController,
         ),
       ),
     );

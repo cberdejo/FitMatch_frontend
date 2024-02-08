@@ -1,8 +1,8 @@
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/providers/pageState.dart';
+import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:flutter/material.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:provider/provider.dart';
 
 class WebLayout extends StatefulWidget {
@@ -68,6 +68,10 @@ class _WebLayoutState extends State<WebLayout> {
   }
 
   Widget profileMenuItem() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final secondaryColor = Theme.of(context).colorScheme.onSecondary;
+
     return InkWell(
       onTap: () => navigationTapped(4),
       child: Column(
@@ -75,7 +79,7 @@ class _WebLayoutState extends State<WebLayout> {
           if (widget.user.profile_picture.isEmpty)
             Icon(
               Icons.person,
-              color: (_page == 4) ? blueColor : Colors.grey,
+              color: (_page == 4) ? primaryContainer : secondaryColor,
               size: 30,
             ),
           if (widget.user.profile_picture.isNotEmpty)
@@ -88,7 +92,7 @@ class _WebLayoutState extends State<WebLayout> {
             child: Text(
               widget.user.username,
               style: TextStyle(
-                color: (_page == 4) ? blueColor : Colors.grey,
+                color: (_page == 4) ? primaryContainer : secondaryColor,
               ),
             ),
           ),
@@ -100,6 +104,9 @@ class _WebLayoutState extends State<WebLayout> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final onSecondaryColor = Theme.of(context).colorScheme.onSecondary;
     _page = Provider.of<PageState>(context, listen: false).currentPage;
     return Scaffold(
       body: Row(
@@ -108,7 +115,7 @@ class _WebLayoutState extends State<WebLayout> {
             flex: 1,
             child: Container(
               width: 200,
-              color: webBackgroundColor,
+              color: primaryColor,
               child: ListView(
                 children: [
                   const SizedBox(
@@ -118,10 +125,10 @@ class _WebLayoutState extends State<WebLayout> {
                     onTap: () {
                       navigationTapped(0);
                     },
-                    child: const Text(
+                    child: Text(
                       'Fit-Match',
                       style: TextStyle(
-                          color: primaryColor,
+                          color: onSecondaryColor,
                           fontSize: 25,
                           fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
@@ -136,7 +143,7 @@ class _WebLayoutState extends State<WebLayout> {
                     },
                     child: Image.asset(
                       'assets/images/logo.png',
-                      color: primaryColor,
+                      color: onSecondaryColor,
                       height: 64,
                     ),
                   ),
@@ -147,25 +154,25 @@ class _WebLayoutState extends State<WebLayout> {
                         Icons.home,
                         'Inicio',
                         0,
-                        (_page == 0) ? blueColor : Colors.grey,
+                        (_page == 0) ? primaryContainer : onSecondaryColor,
                       ),
                       menuItem(
                         Icons.favorite,
                         'Notificaciones',
                         1,
-                        (_page == 1) ? blueColor : Colors.grey,
+                        (_page == 1) ? primaryContainer : onSecondaryColor,
                       ),
                       menuItem(
                         Icons.bookmark,
                         'Guardados',
                         2,
-                        (_page == 2) ? blueColor : Colors.grey,
+                        (_page == 2) ? primaryContainer : onSecondaryColor,
                       ),
                       menuItem(
                         Icons.fitness_center,
                         'Entrenamientos',
                         3,
-                        (_page == 3) ? blueColor : Colors.grey,
+                        (_page == 3) ? primaryContainer : onSecondaryColor,
                       ),
                       profileMenuItem(),
                     ],

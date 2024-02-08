@@ -1,3 +1,4 @@
+// import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 // Base class for preferences
@@ -21,6 +22,7 @@ class CheckboxPreference extends PreferenceOption<bool> {
       value:
           currentValue ?? false, // asegurándose de que currentValue no sea nulo
       onChanged: onChanged,
+      //activeColor: blueColor,
     );
   }
 }
@@ -40,6 +42,7 @@ class RadioPreference<T> extends PreferenceOption<T> {
       value: value,
       groupValue: currentValue,
       onChanged: onChanged,
+      // activeColor: blueColor,
     );
   }
 }
@@ -79,6 +82,7 @@ class _PreferencesCheckboxesWidgetState
         return CheckboxListTile(
           title: Text(option.title),
           value: _checkboxStates[option.title],
+          // activeColor: blueColor,
           onChanged: (bool? newValue) {
             setState(() {
               _checkboxStates[option.title] = newValue!;
@@ -126,6 +130,7 @@ class _PreferencesRadioButtonsWidgetState<T>
         return RadioListTile<T>(
           title: Text(option.title),
           value: option.value,
+          // activeColor: blueColor,
           groupValue: _currentValue,
           onChanged: (T? newValue) {
             setState(() {

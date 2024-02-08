@@ -1,20 +1,15 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isLoading;
   final String text;
-  final Color backgroundColor;
-  final Color progressIndicatorColor;
 
   const CustomButton({
     Key? key,
     required this.onTap,
     this.isLoading = false,
     required this.text,
-    this.backgroundColor = blueColor,
-    this.progressIndicatorColor = primaryColor,
   }) : super(key: key);
 
   @override
@@ -26,13 +21,18 @@ class CustomButton extends StatelessWidget {
         alignment: Alignment.center,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: ShapeDecoration(
+          color: Theme.of(context).colorScheme.primary,
           shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.all(Radius.circular(4))),
-          color: backgroundColor,
         ),
         child: isLoading
-            ? CircularProgressIndicator(color: progressIndicatorColor)
-            : Text(text),
+            ? CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.onPrimary,
+              )
+            : Text(text,
+                style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    )),
       ),
     );
   }

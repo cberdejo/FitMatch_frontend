@@ -5,16 +5,18 @@ class SesionEntrenamiento {
   final int templateId;
   final String sessionName;
   final DateTime sessionDate;
-  final String notes;
-  final List<EjercicioDetallados> ejercicios;
+  final String? notes;
+  int order;
+  final List<EjerciciosDetalladosAgrupados>? ejerciciosDetalladosAgrupados;
 
   SesionEntrenamiento({
     required this.sessionId,
     required this.templateId,
     required this.sessionDate,
     required this.sessionName,
-    required this.notes,
-    required this.ejercicios,
+    this.notes,
+    required this.order,
+    this.ejerciciosDetalladosAgrupados,
   });
 
   factory SesionEntrenamiento.fromJson(Map<String, dynamic> json) {
@@ -24,9 +26,11 @@ class SesionEntrenamiento {
       sessionDate: DateTime.parse(json['session_date']),
       sessionName: json['session_name'],
       notes: json['notes'],
-      ejercicios: (json['ejercicios'] as List)
-          .map((ejercicio) => EjercicioDetallados.fromJson(ejercicio))
-          .toList(),
+      order: json['order'],
+      ejerciciosDetalladosAgrupados:
+          (json['ejercicios_detallados_agrupados'] as List<dynamic>?)
+              ?.map((e) => EjerciciosDetalladosAgrupados.fromJson(e))
+              .toList(),
     );
   }
 
@@ -37,7 +41,11 @@ class SesionEntrenamiento {
       'session_date': sessionDate.toIso8601String(),
       'session_name': sessionName,
       'notes': notes,
-      'ejercicios': ejercicios.map((ejercicio) => ejercicio.toJson()).toList(),
+      'order': order,
+      'ejercicios_detallados_agrupados': ejerciciosDetalladosAgrupados
+          ?.map((ejerciciosDetalladosAgrupados) =>
+              ejerciciosDetalladosAgrupados.toJson())
+          .toList(),
     };
   }
 }

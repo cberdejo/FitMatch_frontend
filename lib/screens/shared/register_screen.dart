@@ -172,7 +172,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         body: SafeArea(
           child: Theme(
             data: Theme.of(context).copyWith(
-              primaryColor: blueColor, // Definir el color del Stepper
+              primaryColor: Theme.of(context)
+                  .colorScheme
+                  .primary, // Definir el color del Stepper
             ),
             child: Form(
               key: _formKey,
@@ -205,15 +207,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       TextButton(
                         onPressed: details.onStepContinue,
                         child: _currentStep == 1
-                            ? const Text('Empezar en Fitmatch',
-                                style: TextStyle(color: blueColor))
-                            : const Text('Continuar',
-                                style: TextStyle(color: blueColor)),
+                            ? Text('Empezar en Fitmatch',
+                                style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary))
+                            : Text('Continuar',
+                                style: TextStyle(
+                                    color:
+                                        Theme.of(context).colorScheme.primary)),
                       ),
                       TextButton(
                         onPressed: details.onStepCancel,
-                        child: const Text('Atrás',
-                            style: TextStyle(color: blueColor)),
+                        child: Text('Atrás',
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.primary)),
                       ),
                     ],
                   );
@@ -376,11 +383,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           GestureDetector(
             onTap: () => Navigator.of(context).push(
                 MaterialPageRoute(builder: (context) => const LoginScreen())),
-            child: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 8),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(' Iniciar sesión',
-                  style:
-                      TextStyle(color: blueColor, fontWeight: FontWeight.bold)),
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold)),
             ),
           ),
         ],
