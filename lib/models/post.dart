@@ -7,8 +7,8 @@ class PlantillaPost {
   final String templateName;
   final String? description;
   final String? picture;
-  final bool public;
-  final bool hidden;
+  bool public;
+  bool hidden;
   final List<Etiqueta> etiquetas;
 
   PlantillaPost({

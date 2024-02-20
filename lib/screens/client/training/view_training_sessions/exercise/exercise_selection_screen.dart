@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/services/sesion_entrenamientos_service.dart';
@@ -157,66 +158,56 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
     });
   }
 
-  void _addComoSuperSet() async {
-    _setLoadingState(true);
-    try {
-      List<Map<String, dynamic>> exercises = selectedExercisesOrder.entries
-          .map((entry) => {
-                'exerciseId': entry.key,
-                'order': entry.value,
-                'typeId': 1, // Tipo de registro por defecto
-                'notes':
-                    'Nota por defecto', // Notas por defecto para cada ejercicio
-              })
-          .toList();
+  void _prepareAndNavigateBack(bool modoSuperSet) {
+    List<EjerciciosDetalladosAgrupados> exercisesGroups = [];
 
-      await EjercicioDetalladosAgrupadoMethods().createGroupedDetailedExercises(
+    if (modoSuperSet) {
+      // Añadir como super set
+      List<EjercicioDetallado> ejerciciosDetallados =
+          selectedExercisesOrder.entries.map((entry) {
+        Ejercicios? ejercicios =
+            exercises.firstWhereOrNull((e) => e.exerciseId == entry.key);
+        return EjercicioDetallado(
+            exerciseId: entry.key,
+            order: entry.value,
+            registerTypeId: 1,
+            notes: '',
+            setsEntrada: [SetsEjerciciosEntrada(setOrder: 1)],
+            ejercicio: ejercicios);
+      }).toList();
+
+      exercisesGroups.add(EjerciciosDetalladosAgrupados(
         sessionId: widget.sessionId,
-        order: widget
-            .GroupedDetailedExerciseOrder, // Orden del grupo de ejercicios dentro de la sesión
-        exercises: exercises,
-      );
-
-      _navigateBack();
-    } catch (e) {
-      print(e.toString());
-    } finally {
-      _setLoadingState(false);
-    }
-  }
-
-  void _addindividualmente() async {
-    _setLoadingState(true);
-    try {
+        order: widget.GroupedDetailedExerciseOrder,
+        ejerciciosDetallados: ejerciciosDetallados,
+      ));
+    } else {
+      // Añadir individualmente
       int currentOrder = widget.GroupedDetailedExerciseOrder;
       for (var entry in selectedExercisesOrder.entries) {
-        final int exerciseId = entry.key;
-        final int order = entry.value;
-        await EjercicioDetalladosAgrupadoMethods()
-            .createGroupedDetailedExercises(
+        Ejercicios? ejercicios =
+            exercises.firstWhereOrNull((e) => e.exerciseId == entry.key);
+        exercisesGroups.add(EjerciciosDetalladosAgrupados(
           sessionId: widget.sessionId,
-          order: currentOrder,
-          exercises: [
-            {
-              'exerciseId': exerciseId,
-              'order': order,
-              'typeId': 1, // Tipo de registro por defecto
-              'notes': '', // Notas por defecto
-            },
+          order: currentOrder++,
+          ejerciciosDetallados: [
+            EjercicioDetallado(
+              exerciseId: entry.key,
+              order: entry.value,
+              registerTypeId: 1,
+              notes: '', // Notas por defecto
+              setsEntrada: [SetsEjerciciosEntrada(setOrder: 1)],
+              ejercicio: ejercicios,
+            ),
           ],
-        );
-        currentOrder++;
+        ));
       }
-      _navigateBack();
-    } catch (e) {
-      print(e.toString());
-    } finally {
-      _setLoadingState(false);
     }
+    _navigateBack(exercisesGroups);
   }
 
-  void _navigateBack() {
-    Navigator.pop(context, true);
+  void _navigateBack(List<EjerciciosDetalladosAgrupados>? exercises) {
+    Navigator.pop(context, exercises);
   }
 
   void _setLoadingState(bool loading) {
@@ -332,7 +323,7 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
           Expanded(
             child: ElevatedButton(
               onPressed: () {
-                _addindividualmente();
+                _prepareAndNavigateBack(false);
               },
               child: Text(
                 'Añadir individualmente',
@@ -348,7 +339,7 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
               ? Expanded(
                   child: ElevatedButton(
                     onPressed: () {
-                      _addComoSuperSet();
+                      _prepareAndNavigateBack(true);
                     },
                     child: Text(
                       'Añadir como super set',

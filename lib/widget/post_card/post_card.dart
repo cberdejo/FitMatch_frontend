@@ -1,5 +1,7 @@
+import 'package:fit_match/models/user.dart';
 import 'package:fit_match/services/review_service.dart';
 import 'package:fit_match/widget/chip_section.dart';
+import 'package:fit_match/widget/exercise_card/overviewPlantilla.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:intl/intl.dart';
@@ -14,12 +16,12 @@ import 'star.dart';
 
 class PostCard extends StatefulWidget {
   final PlantillaPost post;
-  final int userId;
+  final User user;
 
   const PostCard({
     Key? key,
     required this.post,
-    required this.userId,
+    required this.user,
   }) : super(key: key);
 
   @override
@@ -68,7 +70,7 @@ class _PostCardState extends State<PostCard> {
       MaterialPageRoute(
         builder: (context) => ReviewListWidget(
             reviews: reviews,
-            userId: widget.userId,
+            userId: widget.user.user_id,
             fullScreen: true,
             onReviewDeleted: (int reviewId) {
               setState(() {
@@ -194,6 +196,12 @@ class _PostCardState extends State<PostCard> {
         return _buildGeneralContent();
       case 'Reseñas':
         return _buildReviewsContent(width);
+
+      case 'Info':
+        return OverviewPlantilla(
+            user: widget.user,
+            templateId: widget.post.templateId,
+            templateName: widget.post.templateName);
       default:
         return Container(); // Placeholder for 'Información' content
     }
@@ -263,7 +271,7 @@ class _PostCardState extends State<PostCard> {
           margin: const EdgeInsets.symmetric(horizontal: 30.0),
           child: ReviewSummaryWidget(
               reviews: reviews,
-              userId: widget.userId,
+              userId: widget.user.user_id,
               templateId: widget.post.templateId,
               onReviewAdded: (Review review) {
                 //se añade en local en vez de obtener todas de nuevo

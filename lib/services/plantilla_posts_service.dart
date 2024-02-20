@@ -127,6 +127,71 @@ class PlantillaPostsMethods {
           'Error al actualizar la plantilla. Código de estado: ${response.statusCode}');
     }
   }
+
+  Future<bool> toggleHidden(num templateId, String option) async {
+    String url;
+
+    switch (option) {
+      case 'creados':
+        url = '$plantillaHiddenCreadaUrl/$templateId';
+        break;
+      case 'guardadas':
+        url = '$plantillaHiddenGuardadaUrl/$templateId';
+        break;
+      case 'archivadas':
+        url = '$plantillaHiddenArchivadaUrl/$templateId';
+        break;
+      default:
+        return false;
+    }
+    final response = await http.put(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al ocultar la plantilla. Código de estado: ${response.statusCode}');
+    } else {
+      return true;
+    }
+  }
+
+  Future<bool> togglePublico(num templateId) async {
+    final response = await http.put(
+      Uri.parse('$plantillaPublicoUrl/$templateId'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al mostrar la plantilla. Código de estado: ${response.statusCode}');
+    } else {
+      return true;
+    }
+  }
+
+  Future<bool> archivar(num templateId, num userId) async {
+    final response = await http.post(Uri.parse(archivarPlantillaUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'template_id': templateId, 'user_id': userId}));
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al archivar la plantilla. Código de estado: ${response.statusCode}');
+    } else {
+      return true;
+    }
+  }
+
+  Future<bool> guardar(num templateId, num userId) async {
+    final response = await http.post(Uri.parse(guardarPlantillaUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'template_id': templateId, 'user_id': userId}));
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al guardar la plantilla. Código de estado: ${response.statusCode}');
+    } else {
+      return true;
+    }
+  }
 }
 
 class RutinaGuardadaMethods {

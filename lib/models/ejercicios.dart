@@ -1,11 +1,11 @@
 class EjerciciosDetalladosAgrupados {
-  final int groupedDetailedExercisedId;
+  final int? groupedDetailedExercisedId; //se omite si es para creación
   final int sessionId;
-  final int order;
+  int order;
   final List<EjercicioDetallado> ejerciciosDetallados;
 
   EjerciciosDetalladosAgrupados({
-    required this.groupedDetailedExercisedId,
+    this.groupedDetailedExercisedId,
     required this.sessionId,
     required this.order,
     required this.ejerciciosDetallados,
@@ -34,21 +34,22 @@ class EjerciciosDetalladosAgrupados {
 }
 
 class EjercicioDetallado {
-  final int detailedExerciseId;
+  final int? detailedExerciseId; //se omite si es para creación
   final int? exerciseId;
   final int registerTypeId;
-  final String? notes;
-  final int order;
-  final Ejercicios? ejercicios;
+  String? notes;
+  int order;
+  final Ejercicios? ejercicio;
+  List<SetsEjerciciosEntrada>? setsEntrada;
 
-  EjercicioDetallado({
-    required this.detailedExerciseId,
-    this.exerciseId,
-    required this.registerTypeId,
-    this.notes,
-    required this.order,
-    this.ejercicios,
-  });
+  EjercicioDetallado(
+      {this.detailedExerciseId,
+      this.exerciseId,
+      required this.registerTypeId,
+      this.notes,
+      required this.order,
+      this.ejercicio,
+      this.setsEntrada});
 
   factory EjercicioDetallado.fromJson(Map<String, dynamic> json) {
     return EjercicioDetallado(
@@ -57,8 +58,13 @@ class EjercicioDetallado {
       registerTypeId: json['register_type_id'],
       notes: json['notes'],
       order: json['order'],
-      ejercicios: json['ejercicios'] != null
+      ejercicio: json['ejercicios'] != null
           ? Ejercicios.fromJson(json['ejercicios'])
+          : null,
+      setsEntrada: json['sets_ejercicios_entrada'] != null
+          ? (json['sets_ejercicios_entrada'] as List)
+              .map((e) => SetsEjerciciosEntrada.fromJson(e))
+              .toList()
           : null,
     );
   }
@@ -70,7 +76,8 @@ class EjercicioDetallado {
       'register_type_id': registerTypeId,
       'notes': notes,
       'order': order,
-      'ejercicios': ejercicios?.toJson(),
+      'ejercicios': ejercicio?.toJson(),
+      'sets_ejercicios_entrada': setsEntrada?.map((e) => e.toJson()).toList(),
     };
   }
 }
@@ -112,22 +119,26 @@ class Ejercicios {
 }
 
 class SetsEjerciciosEntrada {
-  final int setId;
+  final int? setId; //null para crear
   final int? detailedExerciseId;
-  final int? setOrder;
-  final int? reps;
-  final DateTime? time;
-  final double? weight;
-  final String? video;
+  int setOrder;
+  int? reps;
+  double? time;
+  int? minReps;
+  int? maxReps;
+  double? minTime;
+  double? maxTime;
 
   SetsEjerciciosEntrada({
-    required this.setId,
+    this.setId,
     this.detailedExerciseId,
-    this.setOrder,
+    required this.setOrder,
     this.reps,
     this.time,
-    this.weight,
-    this.video,
+    this.minReps,
+    this.maxReps,
+    this.minTime,
+    this.maxTime,
   });
 
   factory SetsEjerciciosEntrada.fromJson(Map<String, dynamic> json) {
@@ -136,9 +147,11 @@ class SetsEjerciciosEntrada {
       detailedExerciseId: json['detailed_exercise_id'],
       setOrder: json['set_order'],
       reps: json['reps'],
-      time: DateTime.tryParse(json['time']),
-      weight: json['weight'],
-      video: json['video'],
+      time: json['time'],
+      minReps: json['min_reps'],
+      maxReps: json['max_reps'],
+      minTime: json['min_time'],
+      maxTime: json['max_time'],
     );
   }
 
@@ -148,9 +161,11 @@ class SetsEjerciciosEntrada {
       'detailed_exercise_id': detailedExerciseId,
       'set_order': setOrder,
       'reps': reps,
-      'time': time?.toIso8601String(),
-      'weight': weight,
-      'video': video,
+      'time': time,
+      'min_reps': minReps,
+      'max_reps': maxReps,
+      'min_time': minTime,
+      'max_time': maxTime,
     };
   }
 }

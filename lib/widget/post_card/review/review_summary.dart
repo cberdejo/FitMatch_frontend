@@ -1,6 +1,5 @@
 import 'package:fit_match/widget/post_card/star.dart';
 import 'package:flutter/material.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/models/review.dart';
 import 'package:fit_match/utils/utils.dart';
@@ -11,7 +10,7 @@ import 'package:fit_match/services/review_service.dart';
 class ReviewSummaryWidget extends StatefulWidget {
   final List<Review> reviews;
   final Function onReviewAdded;
-  final int userId;
+  final num userId;
   final int templateId;
 
   const ReviewSummaryWidget({

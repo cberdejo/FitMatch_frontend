@@ -12,7 +12,7 @@ import 'package:provider/provider.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   String? token = await getToken(); // Obtener el token JWT
-  await ThemeProvider.instance.changeTheme(ThemeEnum.Dark);
+  await ThemeProvider.instance.changeTheme(ThemeEnum.Light);
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => PageState()),
     ChangeNotifierProvider(create: (_) => ThemeProvider.instance),

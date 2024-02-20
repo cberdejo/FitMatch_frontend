@@ -1,5 +1,4 @@
 import 'package:fit_match/models/post.dart';
-import 'package:fit_match/models/sesion_entrenamiento.dart';
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/responsive/responsive_layout_screen.dart';
 import 'package:fit_match/screens/client/training/view_training_sessions/view_sesion_entrenamientos_screen.dart';
@@ -393,8 +392,7 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: _onWillPop,
+    return PopScope(
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Nuevo Programa'),

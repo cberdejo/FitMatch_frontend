@@ -10,6 +10,20 @@ const usuariosUrl = '${url}usuarios';
 // Plantilla (Template) Management
 const plantillaPostsUrl = '${url}plantillaPosts';
 
+//Plantilla toggle publico
+const plantillaPublicoUrl = '${url}plantillaPostsPublic';
+
+//Plantilla toggle oculto
+const plantillaHiddenCreadaUrl = '${url}plantillaPostHiddenCreada';
+const plantillaHiddenGuardadaUrl = '${url}plantillaPostHiddenGuardada';
+const plantillaHiddenArchivadaUrl = '${url}plantillaPostHiddenArchivada';
+
+//Guardar plantilla
+const guardarPlantillaUrl = '${url}guardarPlantillaPost';
+
+// Archivar plantilla
+const archivarPlantillaUrl = '${url}archivarPlantillaPost';
+
 // Sesión de Entrenamiento (Training Session)
 const sesionEntrenamientoUrl = '${url}sesionEntrenamiento';
 
@@ -33,6 +47,9 @@ const rutinasArchivadasUrl = '${url}rutinasArchivadas';
 
 // Ejercicios detallados agrupados
 const groupedExercisesUrl = '${url}ejerciciosDetalladosAgrupados';
+
+//Ejercicios detallados
+const exercisesDetailsUrl = '${url}ejerciciosDetallados';
 
 // Sesión de Entrenamiento de Entrada (Training Session Entry)
 const sesionEntrenamientoEntradaUrl = '${url}sesionEntrenamientoEntrada';

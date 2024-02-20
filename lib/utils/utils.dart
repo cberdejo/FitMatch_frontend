@@ -148,3 +148,9 @@ List<Widget> buildHomeScreenItems(User user) {
     const Text('e'),
   ];
 }
+
+// for getting exercise letter
+
+String getExerciseLetter(int index) {
+  return String.fromCharCode('A'.codeUnitAt(0) + index);
+}

@@ -1,10 +1,12 @@
+import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/sesion_entrenamiento.dart';
 import 'package:fit_match/models/user.dart';
+import 'package:fit_match/responsive/responsive_layout_screen.dart';
 import 'package:fit_match/screens/client/training/view_training_sessions/info_sesion_entrenamientos_screen.dart';
 import 'package:fit_match/services/sesion_entrenamientos_service.dart';
-import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
+import 'package:fit_match/widget/exercise_card/info_exercise_card.dart';
 import 'package:flutter/material.dart';
 
 class ViewSesionEntrenamientoScreen extends StatefulWidget {
@@ -53,11 +55,13 @@ class _ViewSesionEntrenamientoScreen
     }
   }
 
-  void _deleteSesion(SesionEntrenamiento sesion) async {
+  Future<void> _deleteSesion(index) async {
     await SesionEntrenamientoMethods()
-        .deleteSesionEntrenamiento(sesion.sessionId);
+        .deleteSesionEntrenamiento(sesiones[index].sessionId);
+    setState(() {
+      sesiones.removeAt(index);
+    });
     showToast(context, 'Sesion eliminada', exitoso: true);
-    initSesionEntrenamientos();
   }
 
   Future<void> _navigateNewSesion(
@@ -91,7 +95,14 @@ class _ViewSesionEntrenamientoScreen
     }
   }
 
-  void _saveEntrenamientos() {}
+  void _saveEntrenamientos() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => ResponsiveLayout(
+        user: widget.user,
+        initialPage: 3,
+      ),
+    ));
+  }
 
   void _navigateBack() {
     Navigator.pop(context);
@@ -144,41 +155,50 @@ class _ViewSesionEntrenamientoScreen
       shrinkWrap: true,
       itemCount: sesiones.length,
       itemBuilder: (context, index) {
-        if (width < webScreenSize) {
-          return Dismissible(
-            key: Key(sesiones[index].toString()),
-            background: Container(
-              color: Colors.red,
-              child: const Align(
-                alignment: Alignment.centerLeft,
-                child: Row(children: [Icon(Icons.delete), Text('Eliminar')]),
-              ),
+        return Dismissible(
+          key: Key(sesiones[index].toString()),
+          background: Container(
+            color: Colors.red,
+            child: const Align(
+              alignment: Alignment.centerLeft,
+              child: Row(children: [Icon(Icons.delete), Text('Eliminar')]),
             ),
-            onDismissed: (direction) {
-              if (direction == DismissDirection.endToStart) {
-                _deleteSesion(sesiones[index]);
-              }
-            },
-            child: _buildListItem(context, index),
-          );
-        } else {
-          return _buildListItem(context, index);
-        }
+          ),
+          direction: DismissDirection.endToStart,
+          onDismissed: (direction) async {
+            await _deleteSesion(index);
+          },
+          child: _buildListItem(context, index),
+        );
       },
     );
   }
 
+  // child: GestureDetector(
+  //   onTap: () => _navigateNewSesion(sesiones[index]),
+  //   child: Card(
+  //     child: ListTile(
+  //       title: Text(sesiones[index].sessionName),
+  //       trailing: _buildPopupMenuButton(context, sesiones[index]),
+  //     ),
+  //   ),
+  // ),
   Widget _buildListItem(BuildContext context, int index) {
+    List<EjerciciosDetalladosAgrupados>? ejerciciosDetalladosAgrupados =
+        sesiones[index].ejerciciosDetalladosAgrupados;
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      child: GestureDetector(
-        onTap: () => _navigateNewSesion(sesiones[index]),
-        child: Card(
-          child: ListTile(
-            title: Text(sesiones[index].sessionName),
-            trailing: _buildPopupMenuButton(context, sesiones[index]),
-          ),
-        ),
+      child: ExpansionTile(
+        title: Text(sesiones[index].sessionName),
+        controlAffinity: ListTileControlAffinity.leading,
+        trailing: _buildPopupMenuButton(context, sesiones[index]),
+        children: ejerciciosDetalladosAgrupados != null
+            ? ejerciciosDetalladosAgrupados.asMap().entries.map((entry) {
+                var groupIndex = entry.key;
+                var grupo = entry.value;
+                return buildInfoGroupCard(context, grupo, groupIndex);
+              }).toList()
+            : [Container()],
       ),
     );
   }
@@ -188,11 +208,11 @@ class _ViewSesionEntrenamientoScreen
       itemBuilder: (context) => [
         const PopupMenuItem(
           value: 'Editar',
-          child: Text('editar'),
+          child: Text('Editar'),
         ),
         const PopupMenuItem(
           value: 'Eliminar',
-          child: Text('eliminar'),
+          child: Text('Eliminar'),
         ),
       ],
       onSelected: (value) => _handleMenuItemSelected(value, sesion),

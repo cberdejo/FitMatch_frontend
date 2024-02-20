@@ -13,7 +13,7 @@ import 'package:fit_match/services/review_service.dart';
 
 class ReviewListWidget extends StatefulWidget {
   final List<Review> reviews;
-  final int userId;
+  final num userId;
   final bool fullScreen;
   final Function onReviewDeleted; // Callback
 

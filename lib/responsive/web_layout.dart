@@ -59,6 +59,7 @@ class _WebLayoutState extends State<WebLayout> {
         Text(
           label,
           style: TextStyle(color: color),
+          overflow: TextOverflow.ellipsis,
         ),
         const SizedBox(
           height: 32,
@@ -68,7 +69,6 @@ class _WebLayoutState extends State<WebLayout> {
   }
 
   Widget profileMenuItem() {
-    final primaryColor = Theme.of(context).colorScheme.primary;
     final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
     final secondaryColor = Theme.of(context).colorScheme.onSecondary;
 
@@ -91,6 +91,7 @@ class _WebLayoutState extends State<WebLayout> {
             padding: const EdgeInsets.only(top: 8),
             child: Text(
               widget.user.username,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: (_page == 4) ? primaryContainer : secondaryColor,
               ),

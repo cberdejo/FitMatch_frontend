@@ -118,8 +118,7 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
 
   void _showPost(PlantillaPost post) {
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) =>
-            PostCard(post: post, userId: widget.user.user_id.toInt())));
+        builder: (context) => PostCard(post: post, user: widget.user)));
   }
 
   //SCREEN
