@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:fit_match/models/user.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fit_match/utils/backend_urls.dart';
@@ -13,10 +14,10 @@ class AuthMethods {
     preferences = await SharedPreferences.getInstance();
   }
 
-  Future<String> loginUser({
-    required String email,
-    required String password,
-  }) async {
+  Future<String> loginUser(
+      {required String email,
+      required String password,
+      bool updatePreferences = true}) async {
     String res = "Ha ocurrido algún error";
     try {
       // Initialize preferences
@@ -48,10 +49,10 @@ class AuthMethods {
           // Parse the response JSON if needed
           // Update 'res' based on the response from your backend
           res = successMessage;
-
-          await preferences!
-              .setString('token', json.decode(response.body)['token']);
-          print(preferences!.getString('token'));
+          if (updatePreferences) {
+            await preferences!
+                .setString('token', json.decode(response.body)['token']);
+          }
         } else {
           res = "Error, comprueba tus credenciales.";
         }
@@ -62,6 +63,23 @@ class AuthMethods {
       return err.toString();
     }
     return res;
+  }
+
+  Future<bool> updateUserPreference(num user_id) async {
+    try {
+      initPrefrences();
+      final response = await http.get(
+        Uri.parse('$usuarioTokenUrl/$user_id'),
+      );
+      if (response.statusCode == 200) {
+        await preferences!
+            .setString('token', json.decode(response.body)['token']);
+        return true;
+      }
+      return false;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   Future<String> createUsuario({
@@ -104,5 +122,55 @@ class AuthMethods {
       res = "Ha ocurrido un error al crear el usuario: $e";
     }
     return res;
+  }
+}
+
+class UserMethods {
+  Future<User> editUsuario(User user, Uint8List? picture) async {
+    try {
+      var request = http.MultipartRequest(
+          'PUT', Uri.parse('$usuariosUrl/${user.user_id}'));
+
+      // Convierte el objeto user a un mapa JSON
+      Map<String, String> userData = {
+        'username': user.username,
+        'email': user.email,
+        'birth': user.birth.toString(),
+        'password': user.password,
+        'system': user.system,
+        'bio': user.bio ?? '',
+        'isPublic': user.public.toString(),
+      };
+      request.fields.addAll(userData);
+
+      // Si se proporciona una imagen, inclúyela en el request
+      if (picture != null) {
+        var pictureStream = http.ByteStream.fromBytes(picture);
+        var pictureLength = picture.length;
+        var multipartFile = http.MultipartFile(
+          'profile_picture',
+          pictureStream,
+          pictureLength,
+          filename: 'profile_picture.jpg',
+        );
+        request.files.add(multipartFile);
+      }
+
+      // Envía la solicitud multipart al servidor
+      var response = await request.send();
+
+      // Verifica si la solicitud fue exitosa (código de estado 201)
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return User.fromJson(jsonDecode(await response.stream.bytesToString()));
+      } else {
+        throw Exception(
+          'Error al editar usuario. Código de estado: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      // Maneja cualquier error que pueda ocurrir durante la llamada
+      print('Error al editar usuario: $e');
+      rethrow;
+    }
   }
 }

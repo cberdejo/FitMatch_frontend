@@ -128,7 +128,8 @@ class PlantillaPostsMethods {
     }
   }
 
-  Future<bool> toggleHidden(num templateId, String option) async {
+  Future<bool> toggleHidden(num templateId, String option,
+      {num? userId}) async {
     String url;
 
     switch (option) {
@@ -136,10 +137,18 @@ class PlantillaPostsMethods {
         url = '$plantillaHiddenCreadaUrl/$templateId';
         break;
       case 'guardadas':
-        url = '$plantillaHiddenGuardadaUrl/$templateId';
+        if (userId != null) {
+          url = '$plantillaHiddenGuardadaUrl/$templateId/$userId';
+        } else {
+          return false;
+        }
         break;
       case 'archivadas':
-        url = '$plantillaHiddenArchivadaUrl/$templateId';
+        if (userId != null) {
+          url = '$plantillaHiddenArchivadaUrl/$templateId/$userId';
+        } else {
+          return false;
+        }
         break;
       default:
         return false;

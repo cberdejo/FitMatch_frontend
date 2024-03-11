@@ -6,6 +6,7 @@ const loginUrl = '${url}verificar';
 
 // User Management
 const usuariosUrl = '${url}usuarios';
+const usuarioTokenUrl = '${url}usuarioToken';
 
 // Plantilla (Template) Management
 const plantillaPostsUrl = '${url}plantillaPosts';
@@ -62,3 +63,10 @@ const reviewsUrl = '${url}review';
 const commentUrl = '${url}comment';
 const commentReviewUrl = '${url}commentReview';
 const commentReviewCommentUrl = '${url}commentComment';
+
+//Registros
+const registrosUrl = '${url}registros';
+const registrosSessionUrl = '${url}registrosSession';
+const sessionRegistrosUrl = '${url}sesionRegistros';
+const registroSessionAnteriorUrl = '${url}registroSessionAnterior';
+const registrosSessionPlantillaUrl = '${url}registrosSessionPlantilla';

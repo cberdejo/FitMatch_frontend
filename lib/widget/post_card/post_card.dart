@@ -1,6 +1,11 @@
+import 'package:fit_match/models/sesion_entrenamiento.dart';
 import 'package:fit_match/models/user.dart';
+import 'package:fit_match/screens/client/training/register_training/register_training.dart';
+import 'package:fit_match/services/plantilla_posts_service.dart';
+import 'package:fit_match/services/registro_service.dart';
 import 'package:fit_match/services/review_service.dart';
 import 'package:fit_match/widget/chip_section.dart';
+import 'package:fit_match/widget/custom_button_session.dart';
 import 'package:fit_match/widget/exercise_card/overviewPlantilla.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/utils.dart';
@@ -30,14 +35,25 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   String _selectedOption = 'General';
-  bool _isLoading = true; // Indicador de carga
+  bool _isLoading = true; // Indicador de carga general
+  bool _isLoadingActivePost = true; //Indicador de carga para el botón de activo
   num _averageRating = 0; // Calificación promedio
   List<Review> reviews = [];
+  PlantillaPost? postActivo;
+
+  SesionEntrenamiento? _lastSessionRegistrada;
+  bool _lastSessionIsFinished = false;
 
   @override
   void initState() {
     super.initState();
     _loadReviewsAndCalculateRating();
+    _checkIfIsActive();
+    _loadLastRegister();
+  }
+
+  bool _isActive() {
+    return postActivo != null && postActivo?.hidden == false;
   }
 
   void _loadReviewsAndCalculateRating() async {
@@ -56,6 +72,39 @@ class _PostCardState extends State<PostCard> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  void _loadLastRegister() async {
+    try {
+      Map<String, dynamic> lastRegister = await RegistroMethods()
+          .getLastRegistersByUserIdAndTemplateId(
+              widget.user.user_id as int, widget.post.templateId);
+      setState(() {
+        _lastSessionRegistrada = lastRegister['sesion'];
+        _lastSessionIsFinished = lastRegister['finished'];
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  _checkIfIsActive() async {
+    try {
+      List<PlantillaPost> plantillas =
+          await RutinaGuardadaMethods().getPlantillas(widget.user.user_id);
+      setState(() {
+        postActivo = plantillas.firstWhere(
+          (element) => element.templateId == widget.post.templateId,
+        );
+      });
+      //print(postActivo?.hidden);
+    } catch (e) {
+      //postActivo es nulo
+    } finally {
+      setState(() {
+        _isLoadingActivePost = false;
+      });
     }
   }
 
@@ -82,9 +131,70 @@ class _PostCardState extends State<PostCard> {
     );
   }
 
+  void _activarPlantilla() async {
+    try {
+      if (_isLoadingActivePost) return;
+
+      _isLoadingActivePost = true;
+      bool exito = false;
+
+      if (_isActive()) {
+        //ha de existir un postActivo y no estar oculto
+
+        // se esconde
+        exito = await PlantillaPostsMethods().toggleHidden(
+            widget.post.templateId, "guardadas",
+            userId: widget.user.user_id);
+
+        //No existe o está oculto
+      } else {
+        //si no existe lo guardo
+        if (postActivo == null) {
+          exito = await PlantillaPostsMethods()
+              .guardar(widget.post.templateId, widget.user.user_id);
+        } else {
+          // si ya existe significa que está oculto, debo mostrarlo
+          exito = await PlantillaPostsMethods().toggleHidden(
+              widget.post.templateId, "guardadas",
+              userId: widget.user.user_id);
+        }
+      }
+
+      if (exito) {
+        if (postActivo == null) {
+          await _checkIfIsActive();
+        } else {
+          setState(() {
+            postActivo?.hidden = postActivo!.hidden ? false : true;
+            _isLoadingActivePost = false;
+          });
+        }
+      } else {
+        showToast(context, "Ha ocurrido un error.", exitoso: false);
+      }
+    } catch (e) {
+      showToast(context, 'Ha ocurrido un error ', exitoso: false);
+    }
+  }
+
+  _navigateToRegisterSession() {
+    if (_lastSessionRegistrada != null) {
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => RegisterTrainingScreen(
+                user: widget.user,
+                sessionId: _lastSessionRegistrada!.sessionId,
+              )));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
+    final String StateRegister =
+        _lastSessionIsFinished ? 'Empezar sesión ' : 'Continuar con sesión';
+    final String buttonTextName = _lastSessionRegistrada != null
+        ? _lastSessionRegistrada!.sessionName
+        : '';
 
     return Scaffold(
       appBar: AppBar(
@@ -96,34 +206,48 @@ class _PostCardState extends State<PostCard> {
           },
         ),
       ),
-      body: Center(
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 1000),
-          child: Card(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: Column(children: [
+      body: Stack(
+        children: [
+          Center(
+            child: Container(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Card(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Column(children: [
+                            const SizedBox(height: 12),
+                            _buildListTile(width),
+                            const SizedBox(height: 12),
+                            _buildPostImage(width),
+                            const SizedBox(height: 12),
+                            _buildSelectButtons(),
+                          ]),
+                        ),
                         const SizedBox(height: 12),
-                        _buildListTile(width),
-                        const SizedBox(height: 12),
-                        _buildPostImage(width),
-                        const SizedBox(height: 12),
-                        _buildSelectButtons(),
-                      ]),
+                        _buildContentBasedOnSelection(width),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    _buildContentBasedOnSelection(width),
-                  ],
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+          if (_lastSessionRegistrada != null)
+            Positioned(
+              bottom: 10, // Ajusta la distancia desde el fondo de la pantalla
+              left: 0,
+              right: 0,
+              child: CustomButtonSession(
+                  icon: Icons.sports_gymnastics_outlined,
+                  onTap: () => {_navigateToRegisterSession()},
+                  text: '$StateRegister $buttonTextName'),
+            ),
+        ],
       ),
     );
   }
@@ -163,8 +287,8 @@ class _PostCardState extends State<PostCard> {
   Widget _buildSelectButtons() {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
-    return Row(
-      children: ['General', 'Reseñas', 'Info'].map((option) {
+    return Row(children: [
+      ...['General', 'Reseñas', 'Info'].map((option) {
         return Expanded(
           child: Padding(
             padding: const EdgeInsets.all(4.0),
@@ -185,7 +309,19 @@ class _PostCardState extends State<PostCard> {
           ),
         );
       }).toList(),
-    );
+      if (!_isLoadingActivePost)
+        IconButton(
+            onPressed: () => _activarPlantilla(),
+            icon: _isActive()
+                ? Icon(
+                    Icons.bookmark_added_rounded,
+                    color: Theme.of(context).primaryColor,
+                  )
+                : Icon(
+                    Icons.bookmark_border_rounded,
+                    color: Theme.of(context).primaryColor,
+                  ))
+    ]);
   }
 
   // Obtiene el mapa de secciones cada vez que se construye el widget

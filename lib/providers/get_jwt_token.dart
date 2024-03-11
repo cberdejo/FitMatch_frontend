@@ -9,3 +9,12 @@ Future<String?> getToken() async {
     return null;
   }
 }
+
+Future<void> removeToken() async {
+  try {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+  } catch (e) {
+    print('Error al eliminar el token: $e');
+  }
+}

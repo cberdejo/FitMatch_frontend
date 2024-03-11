@@ -54,12 +54,12 @@ class _mobileLayout extends State<mobileLayout> {
 
   Widget getProfileIcon(int pageNumber) {
     final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
-    final secondaryColor = Theme.of(context).colorScheme.secondary;
+    final secondaryColor = Theme.of(context).colorScheme.onSecondary;
 
-    int _page = Provider.of<PageState>(context).currentPage;
+    int page = Provider.of<PageState>(context).currentPage;
 
     // Verificar si hay una imagen de perfil
-    if (pageNumber == 4 && widget.user.profile_picture.isNotEmpty == true) {
+    if (pageNumber == 3 && widget.user.profile_picture.isNotEmpty) {
       return CircleAvatar(
         backgroundImage: NetworkImage(widget.user.profile_picture),
         radius: 16,
@@ -68,7 +68,7 @@ class _mobileLayout extends State<mobileLayout> {
       // Ícono por defecto si no hay imagen de perfil
       return Icon(
         Icons.person,
-        color: _page == pageNumber ? primaryContainer : secondaryColor,
+        color: page == pageNumber ? primaryContainer : secondaryColor,
       );
     }
   }
@@ -82,7 +82,7 @@ class _mobileLayout extends State<mobileLayout> {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
     final secondaryColor = Theme.of(context).colorScheme.onSecondary;
-    int _page = Provider.of<PageState>(context).currentPage;
+    int page = Provider.of<PageState>(context).currentPage;
 
     return Scaffold(
         body: PageView(
@@ -95,24 +95,24 @@ class _mobileLayout extends State<mobileLayout> {
           items: <BottomNavigationBarItem>[
             buildTabBarItem(
                 Icon(Icons.home,
-                    color: _page == 0 ? primaryContainer : secondaryColor),
+                    color: page == 0 ? primaryContainer : secondaryColor),
                 0),
             buildTabBarItem(
-                Icon(Icons.favorite,
-                    color: _page == 1 ? primaryContainer : secondaryColor),
+                Icon(Icons.explore,
+                    color: page == 1 ? primaryContainer : secondaryColor),
                 1),
             buildTabBarItem(
-                Icon(Icons.bookmark,
-                    color: _page == 2 ? primaryContainer : secondaryColor),
+                Icon(Icons.favorite,
+                    color: page == 2 ? primaryContainer : secondaryColor),
                 2),
             buildTabBarItem(
                 Icon(Icons.fitness_center,
-                    color: _page == 3 ? primaryContainer : secondaryColor),
+                    color: page == 3 ? primaryContainer : secondaryColor),
                 3),
             buildTabBarItem(getProfileIcon(4), 4),
           ],
           onTap: navigationTapped,
-          currentIndex: _page,
+          currentIndex: page,
         ));
   }
 }

@@ -323,6 +323,8 @@ class _ExerciseCard extends State<ExerciseCard> {
         onChanged: (newValue) {
           setState(() {
             selectedRegisterTypes[ejercicioIndex] = newValue!;
+            widget.ejercicioDetalladoAgrupado
+                .ejerciciosDetallados[ejercicioIndex].registerTypeId = newValue;
           });
         },
         items: widget.registerTypes.map((typeRegister) {

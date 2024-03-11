@@ -8,11 +8,13 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:fit_match/responsive/responsive_layout_screen.dart';
 import 'package:fit_match/screens/shared/login_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   String? token = await getToken(); // Obtener el token JWT
   await ThemeProvider.instance.changeTheme(ThemeEnum.Light);
+  initializeDateFormatting('es_ES', null);
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(create: (_) => PageState()),
     ChangeNotifierProvider(create: (_) => ThemeProvider.instance),

@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 class ExpandableText extends StatefulWidget {
   final String text;
   final int maxLines;
-
-  const ExpandableText({Key? key, required this.text, this.maxLines = 5})
+  final TextStyle? style;
+  const ExpandableText(
+      {Key? key, required this.text, this.maxLines = 5, this.style})
       : super(key: key);
 
   @override
@@ -45,6 +46,7 @@ class _ExpandableTextState extends State<ExpandableText> {
           widget.text,
           maxLines: isExpanded ? null : widget.maxLines,
           overflow: TextOverflow.fade,
+          style: widget.style,
         ),
         if (shouldShowButton)
           Row(

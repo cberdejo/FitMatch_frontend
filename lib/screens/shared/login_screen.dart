@@ -1,10 +1,8 @@
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/providers/theme_provider.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
 import 'package:flutter/material.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fit_match/widget/text_field_input.dart';
 import 'package:fit_match/services/auth_service.dart';

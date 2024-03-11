@@ -1,3 +1,5 @@
+import 'package:fit_match/models/registros.dart';
+
 class EjerciciosDetalladosAgrupados {
   final int? groupedDetailedExercisedId; //se omite si es para creación
   final int sessionId;
@@ -36,7 +38,7 @@ class EjerciciosDetalladosAgrupados {
 class EjercicioDetallado {
   final int? detailedExerciseId; //se omite si es para creación
   final int? exerciseId;
-  final int registerTypeId;
+  int registerTypeId;
   String? notes;
   int order;
   final Ejercicios? ejercicio;
@@ -121,6 +123,7 @@ class Ejercicios {
 class SetsEjerciciosEntrada {
   final int? setId; //null para crear
   final int? detailedExerciseId;
+  List<RegistroSet>? registroSet;
   int setOrder;
   int? reps;
   double? time;
@@ -132,6 +135,7 @@ class SetsEjerciciosEntrada {
   SetsEjerciciosEntrada({
     this.setId,
     this.detailedExerciseId,
+    this.registroSet,
     required this.setOrder,
     this.reps,
     this.time,
@@ -152,6 +156,11 @@ class SetsEjerciciosEntrada {
       maxReps: json['max_reps'],
       minTime: json['min_time'],
       maxTime: json['max_time'],
+      registroSet: json['registro_set'] != null && json['registro_set'] != []
+          ? (json['registro_set'] as List)
+              .map((e) => RegistroSet.fromJson(e))
+              .toList()
+          : null,
     );
   }
 
@@ -166,6 +175,7 @@ class SetsEjerciciosEntrada {
       'max_reps': maxReps,
       'min_time': minTime,
       'max_time': maxTime,
+      'registro_set': registroSet?.map((e) => e.toJson()).toList(),
     };
   }
 }

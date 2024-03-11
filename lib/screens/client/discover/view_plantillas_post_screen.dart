@@ -125,7 +125,7 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    final primary = Theme.of(context).colorScheme.primary;
     final width = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
@@ -134,7 +134,7 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
       ),
       body: LiquidPullToRefresh(
         onRefresh: _handleRefresh,
-        color: primaryContainer,
+        color: primary,
         child: ListView.builder(
           physics: const AlwaysScrollableScrollPhysics(),
           itemCount: posts.length + (hasMore ? 1 : 0),

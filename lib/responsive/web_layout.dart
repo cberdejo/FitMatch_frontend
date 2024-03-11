@@ -1,6 +1,5 @@
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/providers/pageState.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -108,6 +107,11 @@ class _WebLayoutState extends State<WebLayout> {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
     final onSecondaryColor = Theme.of(context).colorScheme.onSecondary;
+
+    Color lighterColor =
+        Color.lerp(primaryColor, Colors.white, 0.3) ?? primaryColor;
+    Color darkerColor =
+        Color.lerp(primaryColor, Colors.black, 0.2) ?? primaryColor;
     _page = Provider.of<PageState>(context, listen: false).currentPage;
     return Scaffold(
       body: Row(
@@ -116,7 +120,14 @@ class _WebLayoutState extends State<WebLayout> {
             flex: 1,
             child: Container(
               width: 200,
-              color: primaryColor,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [darkerColor, lighterColor],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  tileMode: TileMode.clamp,
+                ),
+              ),
               child: ListView(
                 children: [
                   const SizedBox(
@@ -158,14 +169,14 @@ class _WebLayoutState extends State<WebLayout> {
                         (_page == 0) ? primaryContainer : onSecondaryColor,
                       ),
                       menuItem(
-                        Icons.favorite,
-                        'Notificaciones',
+                        Icons.explore,
+                        'Explorar',
                         1,
                         (_page == 1) ? primaryContainer : onSecondaryColor,
                       ),
                       menuItem(
-                        Icons.bookmark,
-                        'Guardados',
+                        Icons.favorite,
+                        'Notificaciones',
                         2,
                         (_page == 2) ? primaryContainer : onSecondaryColor,
                       ),

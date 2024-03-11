@@ -8,6 +8,7 @@ import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
 
 import 'package:collection/collection.dart';
+import 'package:fit_match/widget/edit_Icon.dart';
 import 'package:fit_match/widget/preferences.dart';
 import 'package:fit_match/widget/preferences_section.dart';
 import 'package:flutter/foundation.dart';
@@ -488,9 +489,11 @@ class _CreateProgramScreenState extends State<CreateProgramScreen> {
             backgroundColor: Colors.red,
           ),
           Positioned(
-            left: 80,
-            child: IconButton(
-                onPressed: _selectImage, icon: const Icon(Icons.add_a_photo)),
+            top: 0,
+            child: (EditIcon(
+              color: Theme.of(context).colorScheme.primary,
+              onTap: _selectImage,
+            )),
           ),
         ],
       ),

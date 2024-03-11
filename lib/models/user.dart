@@ -1,12 +1,14 @@
 class User {
   final num user_id;
-  final String username;
-  final String email;
-  final String password;
-  final String profile_picture;
-  final DateTime birth; // Use the DateTime class here
+  String username;
+  String email;
+  String password;
+  String profile_picture;
+  DateTime birth;
   final num profile_id;
-  final bool public;
+  String system;
+  String? bio;
+  bool public;
 
   User({
     required this.user_id,
@@ -15,6 +17,8 @@ class User {
     required this.password,
     required this.profile_picture,
     required this.birth,
+    this.system = 'metrico',
+    this.bio,
     required this.profile_id,
     required this.public,
   });
@@ -29,6 +33,8 @@ class User {
       birth: DateTime.parse(json['birth']), // ISO 8601
       profile_id: json['profile_id'],
       public: json['public'],
+      bio: json['bio'],
+      system: json['system'],
     );
   }
 }

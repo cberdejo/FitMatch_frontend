@@ -1,4 +1,5 @@
 import 'package:fit_match/models/ejercicios.dart';
+import 'package:fit_match/models/registros.dart';
 
 class SesionEntrenamiento {
   final int sessionId;
@@ -8,16 +9,17 @@ class SesionEntrenamiento {
   final String? notes;
   int order;
   final List<EjerciciosDetalladosAgrupados>? ejerciciosDetalladosAgrupados;
+  List<RegistroDeSesion>? registros;
 
-  SesionEntrenamiento({
-    required this.sessionId,
-    required this.templateId,
-    required this.sessionDate,
-    required this.sessionName,
-    this.notes,
-    required this.order,
-    this.ejerciciosDetalladosAgrupados,
-  });
+  SesionEntrenamiento(
+      {required this.sessionId,
+      required this.templateId,
+      required this.sessionDate,
+      required this.sessionName,
+      this.notes,
+      required this.order,
+      this.ejerciciosDetalladosAgrupados,
+      this.registros});
 
   factory SesionEntrenamiento.fromJson(Map<String, dynamic> json) {
     return SesionEntrenamiento(
@@ -31,6 +33,9 @@ class SesionEntrenamiento {
           (json['ejercicios_detallados_agrupados'] as List<dynamic>?)
               ?.map((e) => EjerciciosDetalladosAgrupados.fromJson(e))
               .toList(),
+      registros: (json['registro_de_sesion'] as List<dynamic>?)
+          ?.map((e) => RegistroDeSesion.fromJson(e))
+          .toList(),
     );
   }
 
@@ -46,6 +51,8 @@ class SesionEntrenamiento {
           ?.map((ejerciciosDetalladosAgrupados) =>
               ejerciciosDetalladosAgrupados.toJson())
           .toList(),
+      'registro_de_sesion':
+          registros?.map((registros) => registros.toJson()).toList(),
     };
   }
 }
