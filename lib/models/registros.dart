@@ -5,6 +5,7 @@ class RegistroDeSesion {
   final int userId;
   final int sessionId;
   final DateTime date;
+  final DateTime? final_date;
   bool finished;
   final User? usuario;
   List<RegistroSet>? registroSet;
@@ -15,6 +16,7 @@ class RegistroDeSesion {
     required this.sessionId,
     required this.date,
     required this.finished,
+    this.final_date,
     this.usuario,
     this.registroSet,
   });
@@ -25,6 +27,9 @@ class RegistroDeSesion {
       userId: json['user_id'],
       sessionId: json['session_id'],
       date: DateTime.parse(json['date']),
+      final_date: json['final_date'] != null
+          ? DateTime.parse(json['final_date'])
+          : null,
       finished: json['finished'],
       usuario: json['user'] != null ? User.fromJson(json['user']) : null,
       registroSet: json['registro_set'] != null
@@ -41,6 +46,7 @@ class RegistroDeSesion {
       'user_id': userId,
       'session_id': sessionId,
       'date': date.toIso8601String(),
+      'final_date': final_date?.toIso8601String(),
       'finished': finished,
     };
 

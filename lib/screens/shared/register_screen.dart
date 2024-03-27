@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/services/auth_service.dart';
 
 import 'package:fit_match/utils/utils.dart';
@@ -19,10 +18,10 @@ class RegisterScreen extends StatefulWidget {
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  RegisterScreenState createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class RegisterScreenState extends State<RegisterScreen> {
   //form
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -51,15 +50,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   //async
   Future<bool> _sendOTP() async {
-    showToast(context, 'Mire en su bandeja de entrada');
-    return true; //se envia el OTP no esta implementado
+    bool exito = await OTPMethods().sendOTP(_emailController.text);
+    if (exito) {
+      showToast(context, 'Mire en su bandeja de entrada');
+      return true;
+    } else {
+      showToast(context, 'Ha surgido un error, intentelo mas tarde',
+          exitoso: false);
+      return false;
+    }
+  }
+
+  Future<bool> _checkMailDoesntExist() async {
+    bool res =
+        await UserMethods().UserWithEmailDoesntExists(_emailController.text);
+    return res;
   }
 
   Future<void> _verifyOTP() async {
-    bool isOtpValid = true; // no implementado
+    bool isOtpValid = await OTPMethods().checkOtp(_otpController.text);
     if (!isOtpValid) {
       // Manejar el caso de OTP inválido.
-      showToast(context, 'OTP inválido', exitoso: false);
+      showToast(context, 'Código de verificación incorrecto', exitoso: false);
       setState(() => _isLoading = false); // Asegúrate de detener la carga aquí.
       return;
     }
@@ -107,6 +119,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         password: _pswController.text,
       );
 
+      print(loginResult);
       if (loginResult == AuthMethods.successMessage) {
         _navigateToHome();
       } else {
@@ -184,12 +197,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   if (_currentStep < _buildSteps().length) {
                     if (_currentStep == 0) {
                       if (_formKey.currentState!.validate()) {
+                        bool mailIsUnique = await _checkMailDoesntExist();
+                        if (!mailIsUnique) {
+                          showToast(context,
+                              'El correo ya existe, prueba a iniciar sesión',
+                              exitoso: false);
+                          return;
+                        }
                         await _sendOTP();
 
                         setState(() => _currentStep += 1);
                       }
                     } else if (_currentStep == 1) {
-                      if (_otpController.text.length == 4) {
+                      if (_otpController.text.length == 6) {
                         await _verifyOTP();
                       }
                     }
@@ -279,37 +299,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: TextField(
               controller: _otpController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'Introduce el código OTP',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                hintText:
+                    'Introduce el código mandado al correo ${_emailController.text}',
+                border: const OutlineInputBorder(),
               ),
-              maxLength: 4,
+              maxLength: 6,
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
               ],
             ),
           ),
+          const SizedBox(height: 12),
+          _buildSendOTPButton(),
         ],
       ),
     );
   }
 
-  Widget _buildTitle() => const Text(
+  Widget _buildSendOTPButton() => ElevatedButton(
+        onPressed: _sendOTP,
+        child: const Text('No lo has recibido? Enviar de nuevo'),
+      );
+  Widget _buildTitle() => Text(
         'Bienvenido a Fit-Match',
         style: TextStyle(
-            fontSize: 24, fontWeight: FontWeight.bold, color: primaryColor),
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary),
       );
 
   Widget _buildLogo() => Image.asset(
         'assets/images/logo.png',
-        color: primaryColor,
+        color: Theme.of(context).colorScheme.primary,
         height: 32,
       );
 
-  Widget _buildDescription() => const Text(
+  Widget _buildDescription() => Text(
         'Para empezar a usar Fit-Match, rellena los siguientes datos ',
         style: TextStyle(
-            fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary),
       );
 
   Widget _buildImageSelector() => Stack(
@@ -338,9 +369,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
         textEditingController: _emailController,
         hintText: 'Escribe tu correo',
         textInputType: TextInputType.emailAddress,
-        validator: (value) => value == null || value.isEmpty
-            ? 'Por favor, ingresa tu correo'
-            : null,
+        validator: (value) {
+          if (value == null || value.isEmpty) {
+            return 'Por favor, ingresa tu correo';
+          } else if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+              .hasMatch(value)) {
+            return 'Por favor, ingresa un correo válido';
+          }
+          return null;
+        },
       );
 
   Widget _buildPasswordTextField() => TextFieldInput(

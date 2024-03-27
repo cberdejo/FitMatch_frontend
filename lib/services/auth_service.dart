@@ -136,11 +136,12 @@ class UserMethods {
         'username': user.username,
         'email': user.email,
         'birth': user.birth.toString(),
-        'password': user.password,
         'system': user.system,
         'bio': user.bio ?? '',
+        'password': user.password ?? "",
         'isPublic': user.public.toString(),
       };
+
       request.fields.addAll(userData);
 
       // Si se proporciona una imagen, inclúyela en el request
@@ -170,6 +171,82 @@ class UserMethods {
     } catch (e) {
       // Maneja cualquier error que pueda ocurrir durante la llamada
       print('Error al editar usuario: $e');
+      rethrow;
+    }
+  }
+
+  Future<bool> updatePassword(String email, String password) async {
+    User user = await getUserByEmail(email);
+    user.password = password;
+    return editUsuario(user, null)
+        .then((value) => true)
+        .catchError((_) => false);
+  }
+
+  Future<User> getUserByEmail(String email) async {
+    try {
+      final response = await http.get(Uri.parse('$usuariosUrl/email/$email'));
+
+      if (response.statusCode == 404) {
+        //usuario no encontrado
+        throw Exception('Usuario no encontrado');
+      } else {
+        //usuario encontrado
+        return User.fromJson(jsonDecode(response.body));
+      }
+    } catch (err) {
+      rethrow;
+    }
+  }
+
+  Future<bool> UserWithEmailDoesntExists(String email) async {
+    try {
+      final response = await http.get(Uri.parse('$usuariosUrl/email/$email'));
+
+      if (response.statusCode == 404) {
+        //usuario no encontrado
+        return true;
+      } else {
+        //usuario encontrado
+        return false;
+      }
+    } catch (err) {
+      rethrow;
+    }
+  }
+}
+
+class OTPMethods {
+  Future<bool> sendOTP(String email) async {
+    try {
+      final response = await http.post(
+        Uri.parse(sendOtpUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'mail': email}),
+      );
+      if (response.statusCode == 200) {
+        return true; // OTP enviado correctamente
+      } else {
+        return false;
+      }
+    } catch (err) {
+      rethrow;
+    }
+  }
+
+  Future<bool> checkOtp(String otp) async {
+    try {
+      final response = await http.post(
+        Uri.parse(checkOtpUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'otp': otp}),
+      );
+      if (response.statusCode == 200) {
+        return true; // OTP verificado correctamente
+      } else {
+        return false;
+      }
+    } catch (err) {
       rethrow;
     }
   }

@@ -38,7 +38,7 @@ class _ViewSesionEntrenamientoScreen
     super.dispose();
   }
 
-  void initSesionEntrenamientos() async {
+  Future<void> initSesionEntrenamientos() async {
     try {
       // Obtener nuevos posts.
       var sesiones = await SesionEntrenamientoMethods()
@@ -55,17 +55,19 @@ class _ViewSesionEntrenamientoScreen
     }
   }
 
-  Future<void> _deleteSesion(index) async {
-    await SesionEntrenamientoMethods()
-        .deleteSesionEntrenamiento(sesiones[index].sessionId);
+  Future<void> _deleteSesion(SesionEntrenamiento sesion) async {
+    await _deleteSesionById(sesion.sessionId);
     setState(() {
-      sesiones.removeAt(index);
+      sesiones.removeAt(sesiones.indexOf(sesion));
     });
     showToast(context, 'Sesion eliminada', exitoso: true);
   }
 
-  Future<void> _navigateNewSesion(
-      SesionEntrenamiento sesionEntrenamiento) async {
+  Future<void> _deleteSesionById(int id) async {
+    await SesionEntrenamientoMethods().deleteSesionEntrenamiento(id);
+  }
+
+  void _navigateNewSesion(SesionEntrenamiento sesionEntrenamiento) async {
     Navigator.of(context)
         .push(MaterialPageRoute(
       builder: (context) => InfoSesionEntrenamientoScreen(
@@ -74,9 +76,10 @@ class _ViewSesionEntrenamientoScreen
         sessionId: sesionEntrenamiento.sessionId,
       ),
     ))
-        .then((result) {
-      if (result == true) {
-        initSesionEntrenamientos();
+        .then((deleteInfo) {
+      initSesionEntrenamientos(); //cargo las sesiones y se actualizan
+      if (deleteInfo != null) {
+        _deleteSesionById(deleteInfo);
       }
     });
   }
@@ -166,7 +169,7 @@ class _ViewSesionEntrenamientoScreen
           ),
           direction: DismissDirection.endToStart,
           onDismissed: (direction) async {
-            await _deleteSesion(index);
+            await _deleteSesion(sesiones[index]);
           },
           child: _buildListItem(context, index),
         );

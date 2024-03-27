@@ -63,7 +63,7 @@ class SesionEntrenamientoMethods {
           .toList();
     } else {
       throw Exception(
-          'Error al obtener los posts. Código de estado: ${response.statusCode}');
+          'Error al obtener las sesiones de entrenamiento. Código de estado: ${response.statusCode}');
     }
   }
 
@@ -167,7 +167,7 @@ class EjerciciosMethods {
       return jsonData.map((jsonItem) => Ejercicios.fromJson(jsonItem)).toList();
     } else {
       throw Exception(
-          'Error al obtener los posts. Código de estado: ${response.statusCode}');
+          'Error al obtener los ejercicios por grupo muscular. Código de estado: ${response.statusCode}');
     }
   }
 
@@ -199,7 +199,7 @@ class EjercicioDetalladosAgrupadoMethods {
           .toList();
     } else {
       throw Exception(
-          'Error al obtener los posts. Código de estado: ${response.statusCode}');
+          'Error al obtener los ejercicios detallados agrupados. Código de estado: ${response.statusCode}');
     }
   }
 

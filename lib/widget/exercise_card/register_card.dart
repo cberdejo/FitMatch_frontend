@@ -5,13 +5,14 @@ import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/dialog.dart';
 import 'package:fit_match/widget/expandable_text.dart';
+import 'package:fit_match/widget/number_input_field.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class RegisterCard extends StatefulWidget {
   final EjerciciosDetalladosAgrupados ejercicioDetalladoAgrupado;
   final int index;
   final int registerSessionId;
+  final String system;
   final Function(SetsEjerciciosEntrada) onAddSet;
   final Function(SetsEjerciciosEntrada, RegistroSet) onDeleteSet;
   final Function(SetsEjerciciosEntrada, int) onUpdateSet;
@@ -24,6 +25,7 @@ class RegisterCard extends StatefulWidget {
     required this.onDeleteSet,
     required this.onUpdateSet,
     required this.registerSessionId,
+    this.system = "metrico",
   }) : super(key: key);
 
   @override
@@ -58,12 +60,13 @@ class _RegisterCard extends State<RegisterCard> {
     );
   }
 
-  List<RegistroSet> _getThisRegisterSessionSets(
-      SetsEjerciciosEntrada setsEjerciciosEntrada) {
-    return setsEjerciciosEntrada.registroSet!
+  _getThisRegisterSessionSets(SetsEjerciciosEntrada setsEjerciciosEntrada) {
+    List<RegistroSet> sets = setsEjerciciosEntrada.registroSet!
         .where(
             (element) => element.registerSessionId == widget.registerSessionId)
         .toList();
+
+    return sets;
   }
 
   @override
@@ -226,10 +229,6 @@ class _RegisterCard extends State<RegisterCard> {
                     ),
                   ),
                 )
-
-                // Spacer(
-                //   flex: width < webScreenSize ? 5 : 3,
-                // ),
               ],
             ),
           ),
@@ -244,6 +243,7 @@ class _RegisterCard extends State<RegisterCard> {
               return SetRow(
                 set: setEntrada,
                 registerSessionId: widget.registerSessionId,
+                system: widget.system,
                 onDeleteSet: () => widget.onDeleteSet(setEntrada, registro),
                 selectedRegisterType: ejercicioDetallado.registerTypeId,
                 registroIndex: registroIndex,
@@ -266,66 +266,12 @@ class _RegisterCard extends State<RegisterCard> {
   }
 }
 
-class NumberInputField extends StatelessWidget {
-  final Function(String) onFieldSubmitted;
-  final String? hintText;
-  final String? label;
-  final TextEditingController? controller;
-
-  const NumberInputField({
-    Key? key,
-    required this.onFieldSubmitted,
-    this.hintText,
-    this.controller,
-    this.label,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    // Estilo personalizado para el borde del campo de texto
-    OutlineInputBorder borderStyle = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(8), // Bordes redondeados
-      borderSide: BorderSide(
-        color: Colors.grey.shade300, // Color del borde
-      ),
-    );
-
-    return TextFormField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        border: borderStyle,
-        labelText: label,
-        enabledBorder: borderStyle,
-        focusedBorder: borderStyle.copyWith(
-          borderSide: BorderSide(
-            color: Theme.of(context).primaryColor,
-            width: 2,
-          ),
-        ),
-        errorBorder: borderStyle.copyWith(
-          borderSide: const BorderSide(
-            color: Colors.red,
-          ),
-        ),
-        hintText: hintText,
-        contentPadding:
-            const EdgeInsets.symmetric(vertical: 8.0, horizontal: 10.0),
-        filled: true,
-        fillColor: Theme.of(context).colorScheme.background,
-      ),
-      textAlign: TextAlign.center,
-      onChanged: onFieldSubmitted,
-    );
-  }
-}
-
 class SetRow extends StatefulWidget {
   final SetsEjerciciosEntrada set;
   final int selectedRegisterType;
   final int registerSessionId;
   final int registroIndex;
+  final String system;
 
   final Function(SetsEjerciciosEntrada) onUpdateSet;
   final Function() onDeleteSet;
@@ -338,6 +284,7 @@ class SetRow extends StatefulWidget {
     required this.onDeleteSet,
     required this.registerSessionId,
     required this.registroIndex,
+    required this.system,
   }) : super(key: key);
 
   @override
@@ -348,14 +295,14 @@ class _SetRowState extends State<SetRow> {
   late TextEditingController repsController;
   late TextEditingController weightController;
   Timer? _debounce;
-  String weightUnit = 'kg';
+  String weightUnit = '';
 
   @override
   void initState() {
     repsController = TextEditingController();
     weightController = TextEditingController();
 
-    _initWeightUnit();
+    weightUnit = widget.system == "metrico" ? 'kg' : 'lbs';
 
     super.initState();
   }
@@ -364,13 +311,6 @@ class _SetRowState extends State<SetRow> {
   void dispose() {
     _debounce?.cancel();
     super.dispose();
-  }
-
-  _initWeightUnit() async {
-    final system = await getSystem();
-    setState(() {
-      weightUnit = system == 'metrico' ? 'kg' : 'lbs';
-    });
   }
 
   _lengthRegistroSession() {
@@ -413,6 +353,9 @@ class _SetRowState extends State<SetRow> {
       } else {
         RegistroSet previousToLast = filteredSets.reduce((curr, next) =>
             curr.timestamp.isBefore(next.timestamp) ? curr : next);
+        widget.system == "metrico"
+            ? previousToLast.weight = previousToLast.weight!
+            : previousToLast.weight = fromKgToLbs(previousToLast.weight!);
         return previousToLast;
       }
     }
@@ -454,36 +397,62 @@ class _SetRowState extends State<SetRow> {
           break;
       }
 
-      widget.onUpdateSet(widget.set);
+      //Solo se actualiza si lo valores no son nulos
+      switch (widget.selectedRegisterType) {
+        case 2: // Rango de repeticiones
+          if (actualSet.reps != null) {
+            widget.onUpdateSet(widget.set);
+          }
+          break;
+        case 4: // AMRAP
+          //no hay que actualizar nada
+          break;
+        case 5: // Tiempo
+          if (actualSet.time != null) {
+            widget.onUpdateSet(widget.set);
+          }
+          break;
+        case 6: //Rango de tiempo
+          if (actualSet.time != null && actualSet.weight != null) {
+            widget.onUpdateSet(widget.set);
+          }
+          break;
+        default:
+          if (actualSet.reps != null && actualSet.weight != null) {
+            widget.onUpdateSet(widget.set);
+          }
+          break;
+      }
     });
+  }
+
+  String transformWeightIntoLbs(double? weight) {
+    if (weight == null) {
+      return '';
+    }
+
+    if (widget.system == "metrico") {
+      return weight.toString();
+    } else if (widget.system == "imperial") {
+      return fromKgToLbs(weight).toString();
+    }
+
+    return '';
   }
 
   List<Widget> _buildInputFields() {
     switch (widget.selectedRegisterType) {
-      case 1: // Rango de repeticiones
+      case 2: // Objetivo de repeticiones
 
         repsController.text = actualSet.reps?.toString() ?? '';
-        weightController.text = actualSet.weight?.toString() ?? '';
+        weightController.text = transformWeightIntoLbs(actualSet.weight);
         return [
           Expanded(
-            child: NumberInputField(
-              hintText: previousToLastSet == null
-                  ? "reps"
-                  : previousToLastSet!.reps.toString(),
+            child: DoubleInputField(
+              hintText: "reps",
               controller: repsController,
               label: "reps",
               onFieldSubmitted: (value) => _updateSet(value, 'reps'),
-            ),
-          ),
-          dash,
-          Expanded(
-            child: NumberInputField(
-              controller: weightController,
-              hintText: previousToLastSet == null
-                  ? weightUnit
-                  : previousToLastSet!.weight.toString(),
-              label: weightUnit,
-              onFieldSubmitted: (value) => _updateSet(value, 'weight'),
             ),
           ),
         ];
@@ -495,12 +464,10 @@ class _SetRowState extends State<SetRow> {
         weightController.text = actualSet.time?.toString() ?? '';
         return [
           Expanded(
-            child: NumberInputField(
+            child: DoubleInputField(
               controller: weightController,
               label: "min",
-              hintText: previousToLastSet == null
-                  ? "min"
-                  : previousToLastSet!.time.toString(),
+              hintText: "min",
               onFieldSubmitted: (value) => _updateSet(value, 'time'),
             ),
           ),
@@ -508,53 +475,44 @@ class _SetRowState extends State<SetRow> {
         ];
       case 6: // Rango de tiempo
         repsController.text = actualSet.time?.toString() ?? '';
-        weightController.text = actualSet.weight?.toString() ?? '';
+        weightController.text = transformWeightIntoLbs(actualSet.weight);
         return [
           Expanded(
-            child: NumberInputField(
+            child: DoubleInputField(
               controller: repsController,
               label: "min",
-              hintText: previousToLastSet == null
-                  ? "min"
-                  : previousToLastSet!.time.toString(),
-              onFieldSubmitted: (value) => _updateSet(value, 'minTime'),
-            ),
-          ),
-          dash,
-          Expanded(
-            child: NumberInputField(
-              controller: weightController,
-              label: "min",
-              hintText: previousToLastSet == null
-                  ? weightUnit
-                  : previousToLastSet!.weight.toString(),
-              onFieldSubmitted: (value) => _updateSet(value, 'maxTime'),
+              hintText: "min",
+              onFieldSubmitted: (value) => _updateSet(value, 'time'),
             ),
           ),
           minText,
+          dash,
+          Expanded(
+            child: DoubleInputField(
+              controller: weightController,
+              label: weightUnit,
+              hintText: weightUnit,
+              onFieldSubmitted: (value) => _updateSet(value, 'weight'),
+            ),
+          ),
         ];
-      default: // Por defecto, solo repeticiones
-        repsController.text = actualSet.reps.toString();
-        weightController.text = actualSet.weight?.toString() ?? '';
-
+      default: // Por defecto, solo repeticiones y peso
+        repsController.text = actualSet.reps?.toString() ?? '';
+        weightController.text = transformWeightIntoLbs(actualSet.weight);
         return [
           Expanded(
-            child: NumberInputField(
+            child: DoubleInputField(
               label: "reps",
-              hintText: previousToLastSet == null
-                  ? "reps"
-                  : previousToLastSet!.reps.toString(),
+              hintText: "reps",
               controller: repsController,
               onFieldSubmitted: (value) => _updateSet(value, 'reps'),
             ),
           ),
           dash,
           Expanded(
-              child: NumberInputField(
+              child: DoubleInputField(
             label: weightUnit,
-            hintText: previousToLastSet == null
-                ? weightUnit
-                : previousToLastSet!.weight.toString(),
+            hintText: weightUnit,
             controller: weightController,
             onFieldSubmitted: (value) => _updateSet(value, 'weight'),
           ))
@@ -569,7 +527,7 @@ class _SetRowState extends State<SetRow> {
         return [
           Expanded(
             child: Text(
-              "${widget.set.minReps?.toString() ?? '_'}-${widget.set.maxReps?.toString() ?? '_'} reps",
+              "${widget.set.minReps?.toString() ?? '_'} reps-${widget.set.maxReps?.toString() ?? '_'} reps",
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -598,7 +556,7 @@ class _SetRowState extends State<SetRow> {
         return [
           Expanded(
             child: Text(
-              "${widget.set.maxTime?.toString() ?? '_'}-${widget.set.maxTime?.toString() ?? '_'} min",
+              "${widget.set.maxTime?.toString() ?? '_'} min-${widget.set.maxTime?.toString() ?? '_'} min",
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -620,19 +578,21 @@ class _SetRowState extends State<SetRow> {
     if (previousToLastSet == null) {
       return [
         const Expanded(
-          child: Text("  _", style: TextStyle(fontSize: 16)),
+          child: Text('N/A',
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey)),
         ),
       ];
     }
 
     //  que previousToLastSet no es nulo
     switch (widget.selectedRegisterType) {
-      case 1: // Rango de repeticiones
+      case 2:
         return [
           Expanded(
             child: Text(
-              "${previousToLastSet!.reps?.toString() ?? '_'} reps x ${previousToLastSet!.weight?.toString() ?? '_'} weightUnit",
-              overflow: TextOverflow.clip,
+              "${previousToLastSet!.reps.toString()} reps ",
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ];
@@ -650,7 +610,7 @@ class _SetRowState extends State<SetRow> {
         return [
           Expanded(
             child: Text(
-              "${previousToLastSet!.time?.toString() ?? '_'} min",
+              "${previousToLastSet!.time.toString()} min",
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -659,7 +619,7 @@ class _SetRowState extends State<SetRow> {
         return [
           Expanded(
             child: Text(
-              "${previousToLastSet!.time?.toString() ?? '_'} min x ${widget.set.maxTime?.toString() ?? '_'} weightUnit",
+              "${previousToLastSet!.time.toString()} min x ${previousToLastSet!.weight.toString()} $weightUnit",
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -668,7 +628,7 @@ class _SetRowState extends State<SetRow> {
         return [
           Expanded(
             child: Text(
-              "${previousToLastSet!.reps?.toString() ?? '_'} reps x ${previousToLastSet!.weight?.toString() ?? '_'} weightUnit",
+              "${previousToLastSet!.reps.toString()} reps x ${previousToLastSet!.weight.toString()} $weightUnit",
               overflow: TextOverflow.ellipsis,
             ),
           ),

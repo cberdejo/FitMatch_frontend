@@ -7,7 +7,6 @@ import 'package:fit_match/widget/text_field_input.dart';
 import 'package:intl/intl.dart';
 import 'package:like_button/like_button.dart';
 import 'package:fit_match/models/review.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/services/review_service.dart';
 
@@ -240,10 +239,12 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
     if (widget.fullScreen) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Reviews',
             style: TextStyle(
-                fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary),
             textAlign: TextAlign.center,
           ),
         ),
@@ -515,7 +516,9 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                     const SizedBox(width: 4),
                     Text(
                       "-$_timeAgo",
-                      style: const TextStyle(fontSize: 14, color: primaryColor),
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.primary),
                       textScaler: width < webScreenSize
                           ? const TextScaler.linear(0.8)
                           : const TextScaler.linear(1.2),

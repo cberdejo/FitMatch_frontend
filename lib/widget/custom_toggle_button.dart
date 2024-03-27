@@ -1,4 +1,3 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomToggleButtons extends StatefulWidget {
@@ -30,9 +29,9 @@ class _CustomToggleButtonsState extends State<CustomToggleButtons> {
   Widget build(BuildContext context) {
     return ToggleButtons(
       borderColor: Colors.grey,
-      fillColor: blueColor,
+      fillColor: Theme.of(context).colorScheme.primary,
       selectedBorderColor: Theme.of(context).primaryColor,
-      selectedColor: primaryColor,
+      selectedColor: Theme.of(context).colorScheme.primary,
       borderRadius: BorderRadius.circular(8),
       //spacing: 4,
       isSelected: _selection,

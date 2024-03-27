@@ -1,4 +1,5 @@
 import 'package:fit_match/models/user.dart';
+import 'package:fit_match/screens/shared/change_password.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +14,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _pswController = TextEditingController();
   bool _isLoading = false;
@@ -52,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _navigateToHome();
       } else {
         print("Error de autenticación: $result");
-        showToast(context, "Error de autenticación: $result", exitoso: false);
+        showToast(context, "$result", exitoso: false);
       }
     } catch (error) {
       print("Error inesperado: $error");
@@ -100,15 +101,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     Flexible(flex: 2, child: Container()),
                     _buildTitle(),
-                    const Spacer(),
+                    const Spacer(flex: 1),
                     _buildLogo(),
-                    const Spacer(),
+                    const Spacer(flex: 1),
                     _buildEmailTextField(),
-                    const Spacer(),
+                    const Spacer(flex: 1),
                     _buildPasswordTextField(),
-                    const Spacer(),
+                    const Spacer(flex: 1),
                     _buildLoginButton(),
-                    const Spacer(),
+                    _buildForgottenPassword(),
+                    const Spacer(flex: 1),
                     _buildRegisterOption(context),
                   ],
                 ),
@@ -120,14 +122,23 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-/*
-  EdgeInsets _getHorizontalPadding(BuildContext context) {
-    return MediaQuery.of(context).size.width > webScreenSize
-        ? EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width / 3)
-        : const EdgeInsets.symmetric(horizontal: 32);
+  Widget _buildForgottenPassword() {
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => const ForgotPasswordScreen())),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Text(
+            '¿Olvidaste la contraseña?',
+            style: TextStyle(color: Theme.of(context).colorScheme.primary),
+          ),
+        ),
+      ),
+    );
   }
-*/
+
   Widget _buildTitle() => const Text(
         'Bienvenido a Fit-Match',
         style: TextStyle(
@@ -170,12 +181,15 @@ class _LoginScreenState extends State<LoginScreen> {
           GestureDetector(
             onTap: () => Navigator.of(context).push(MaterialPageRoute(
                 builder: (context) => const RegisterScreen())),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Text(' Registrate aquí',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.primary)),
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: Text(' Registrate aquí',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Theme.of(context).colorScheme.primary)),
+              ),
             ),
           ),
         ],

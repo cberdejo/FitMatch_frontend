@@ -8,7 +8,6 @@ import 'package:fit_match/models/review.dart';
 import 'package:fit_match/screens/client/discover/view_plantillas_post_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
@@ -70,7 +69,7 @@ void showToast(BuildContext context, String message, {bool exitoso = true}) {
   final snackBar = SnackBar(
     content: Text(message,
         style:
-            const TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+            const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     backgroundColor: exitoso ? Colors.green : Colors.red,
     behavior: SnackBarBehavior.floating,
     duration: const Duration(seconds: 2),
@@ -159,17 +158,16 @@ String getExerciseLetter(int index) {
   return String.fromCharCode('A'.codeUnitAt(0) + index);
 }
 
-// for getting system preference (imperial or metrico)
-Future<String> getSystem() async {
-  String? token = await getToken();
-  try {
-    Map<String, dynamic> decodedToken = JwtDecoder.decode(token!);
-    if (decodedToken.containsKey('user')) {
-      return decodedToken['user']['system'];
-    }
-    throw Exception('Error al decodificar el token');
-  } catch (e) {
-    print('Error al decodificar el token: $e');
-    return 'Metrico';
-  }
+// for getting kg to lbs and viceversa
+
+double fromKgToLbs(double kg) {
+  return double.parse((kg * 2.20462).toStringAsFixed(2));
 }
+
+double fromCmToInches(double cm) {
+  return double.parse((cm * 0.393701).toStringAsFixed(2));
+}
+
+// for displaying all medidas atributes on a dropdown 
+
+

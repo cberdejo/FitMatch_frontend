@@ -1,4 +1,3 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 Widget buildChipsSection(String? title, List<dynamic> chipsContent) {

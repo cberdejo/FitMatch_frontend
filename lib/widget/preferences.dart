@@ -109,11 +109,11 @@ class PreferencesRadioButtonsWidget<T> extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PreferencesRadioButtonsWidgetState<T> createState() =>
-      _PreferencesRadioButtonsWidgetState<T>();
+  PreferencesRadioButtonsWidgetState<T> createState() =>
+      PreferencesRadioButtonsWidgetState<T>();
 }
 
-class _PreferencesRadioButtonsWidgetState<T>
+class PreferencesRadioButtonsWidgetState<T>
     extends State<PreferencesRadioButtonsWidget<T>> {
   late T _currentValue;
 

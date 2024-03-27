@@ -1,5 +1,6 @@
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/screens/client/home/historial.dart';
+import 'package:fit_match/screens/client/home/analiticas/medidas.dart';
+import 'package:fit_match/screens/client/home/historial/historial.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/widget/card_option_home.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,11 @@ class _HomeScreen extends State<HomeScreen> {
   }
 
   void _navigateToMedidas() {
-    print("Medidas");
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => MedidasScreen(
+        user: widget.user,
+      ),
+    ));
   }
 
   //SCREEN
@@ -140,11 +145,24 @@ class _HomeScreen extends State<HomeScreen> {
         Positioned(
           left: (circleSize - imageSize) / 2,
           top: (circleSize - imageSize) / 2,
-          child: CircleAvatar(
-            radius: imageSize / 2,
-            backgroundImage: NetworkImage(widget.user.profile_picture),
-            backgroundColor: Theme.of(context).colorScheme.primary,
+          child: ClipOval(
+            child: Image.network(
+              widget.user.profile_picture ?? "",
+              width: imageSize, // Diámetro del círculo
+              height: imageSize,
+              fit: BoxFit.cover, // Asegúrate de que la imagen cubra el círculo
+              errorBuilder:
+                  (BuildContext context, Object error, StackTrace? stackTrace) {
+                return Icon(Icons.account_circle,
+                    size: imageSize); // Ejemplo con un Icono
+              },
+            ),
           ),
+          //  CircleAvatar(
+          //   radius: imageSize / 2,
+          //   backgroundImage: NetworkImage(widget.user.profile_picture),
+          //   backgroundColor: Theme.of(context).colorScheme.primary,
+          // ),
         ),
       ],
     );

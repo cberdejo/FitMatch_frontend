@@ -1,4 +1,3 @@
-import 'package:fit_match/utils/colors.dart';
 import 'package:flutter/material.dart';
 
 class ExpandableText extends StatefulWidget {
@@ -58,7 +57,8 @@ class _ExpandableTextState extends State<ExpandableText> {
                 }),
                 child: Text(
                   isExpanded ? 'Ver menos' : 'Ver más',
-                  style: const TextStyle(color: blueColor),
+                  style:
+                      TextStyle(color: Theme.of(context).colorScheme.primary),
                 ),
               ),
             ],

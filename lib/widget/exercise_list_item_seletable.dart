@@ -1,5 +1,4 @@
 import 'package:fit_match/models/ejercicios.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:flutter/material.dart';
 
@@ -22,8 +21,8 @@ class BuildExerciseItem extends StatelessWidget {
     final width = MediaQuery.of(context).size.width;
 
     final style = isSelected
-        ? const TextStyle(
-            color: blueColor,
+        ? TextStyle(
+            color: Theme.of(context).colorScheme.primary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           )
@@ -41,7 +40,7 @@ class BuildExerciseItem extends StatelessWidget {
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            trailingWidget(),
+            trailingWidget(context),
             IconButton(
               icon: const Icon(Icons.info_outline),
               onPressed: () {
@@ -57,18 +56,18 @@ class BuildExerciseItem extends StatelessWidget {
     );
   }
 
-  Widget trailingWidget() {
+  Widget trailingWidget(BuildContext context) {
     if (isSelected && order != null) {
       return Container(
-        padding: const EdgeInsets.all(4),
-        decoration: const BoxDecoration(
-          color: blueColor,
+        padding: EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary,
           shape: BoxShape.circle,
         ),
         child: Text(
           order.toString(),
-          style: const TextStyle(
-            color: primaryColor,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.primary,
             fontSize: 14,
           ),
         ),

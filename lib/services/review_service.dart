@@ -143,6 +143,6 @@ Future<List<Review>> getAllReviews(num templateId,
     return jsonData.map((jsonItem) => Review.fromJson(jsonItem)).toList();
   } else {
     throw Exception(
-        'Error al obtener los posts. Código de estado: ${response.statusCode}');
+        'Error al obtener las reviews. Código de estado: ${response.statusCode}');
   }
 }

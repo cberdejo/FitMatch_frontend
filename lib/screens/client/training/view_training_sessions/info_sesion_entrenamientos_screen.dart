@@ -5,9 +5,11 @@ import 'package:fit_match/screens/client/training/view_training_sessions/exercis
 import 'package:fit_match/services/sesion_entrenamientos_service.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/custom_button.dart';
+
 import 'package:fit_match/widget/exercise_card/exercise_card.dart';
 import 'package:fit_match/widget/exercise_card/reorder_exercise_card.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
 
 class InfoSesionEntrenamientoScreen extends StatefulWidget {
   final int templateId;
@@ -86,7 +88,7 @@ class _InfoSesionEntrenamientoScreen
       _initExercises();
     } catch (e) {
       setState(() => isLoading = false);
-      print(e); // Consider using a more user-friendly error handling
+      print(e);
     }
   }
 
@@ -131,7 +133,11 @@ class _InfoSesionEntrenamientoScreen
 
     // Si shouldPop es true, entonces navega hacia atrás.
     if (shouldPop ?? false) {
-      _navigateBack(context);
+      int? deleteInfo;
+      if (_exercises.isEmpty) {
+        deleteInfo = editingSesion.sessionId;
+      }
+      _navigateBack(context, deleteInfo: deleteInfo);
     }
 
     return Future.value(
@@ -168,7 +174,9 @@ class _InfoSesionEntrenamientoScreen
   }
 
   Future<void> _saveEntrenamiento() async {
-    if (_formKey.currentState!.validate()) {
+    if (_formKey.currentState!.validate() &&
+        _exercises.isNotEmpty &&
+        _exercises[0].ejerciciosDetallados.isNotEmpty) {
       try {
         SesionEntrenamiento sesion = SesionEntrenamiento(
           sessionId: editingSesion.sessionId,
@@ -186,16 +194,22 @@ class _InfoSesionEntrenamientoScreen
         if (response == 200) {
           showToast(
               context, 'Sesión de Entrenamiento actualizada correctamente');
-          _navigateBack(context, reload: true);
+          _navigateBack(context);
         }
       } catch (e) {
         showToast(context, e.toString(), exitoso: false);
       }
+    } else {
+      showToast(context, 'Pon al menos un ejercicio con un set',
+          exitoso: false);
     }
   }
 
-  void _navigateBack(BuildContext context, {bool reload = false}) {
-    Navigator.pop(context, reload);
+  void _navigateBack(
+    BuildContext context, {
+    int? deleteInfo,
+  }) {
+    Navigator.pop(context, deleteInfo);
   }
 
   void _onAddSet(int groupIndex, int exerciseIndex) {

@@ -191,11 +191,14 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
           ),
         ),
         body: SafeArea(
-          child: TabBarView(controller: _tabController, children: [
-            _buildProgramList(context, 'Activos'),
-            _buildProgramList(context, 'Creados'),
-            _buildProgramList(context, 'Archivados'),
-          ]),
+          child: TabBarView(
+            controller: _tabController,
+            children: [
+              _buildProgramList(context, 'Activos'),
+              _buildProgramList(context, 'Creados'),
+              _buildProgramList(context, 'Archivados'),
+            ],
+          ),
         ),
         floatingActionButton: _tabController.index == 1
             ? FloatingActionButton(

@@ -59,10 +59,19 @@ class _mobileLayout extends State<mobileLayout> {
     int page = Provider.of<PageState>(context).currentPage;
 
     // Verificar si hay una imagen de perfil
-    if (pageNumber == 3 && widget.user.profile_picture.isNotEmpty) {
-      return CircleAvatar(
-        backgroundImage: NetworkImage(widget.user.profile_picture),
-        radius: 16,
+    if (pageNumber == 4 && widget.user.profile_picture != null) {
+      return ClipOval(
+        child: Image.network(
+          widget.user.profile_picture!,
+          width: 32, // Diámetro del círculo
+          height: 32,
+          fit: BoxFit.cover, // Asegúrate de que la imagen cubra el círculo
+          errorBuilder:
+              (BuildContext context, Object error, StackTrace? stackTrace) {
+            return const Icon(Icons.account_circle,
+                size: 32); // Ejemplo con un Icono
+          },
+        ),
       );
     } else {
       // Ícono por defecto si no hay imagen de perfil

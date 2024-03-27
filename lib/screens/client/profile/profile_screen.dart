@@ -21,10 +21,10 @@ class ViewProfileScreen extends StatefulWidget {
   const ViewProfileScreen({Key? key, required this.user}) : super(key: key);
 
   @override
-  State<ViewProfileScreen> createState() => _ViewProfileScreen();
+  State<ViewProfileScreen> createState() => ViewProfileState();
 }
 
-class _ViewProfileScreen extends State<ViewProfileScreen> {
+class ViewProfileState extends State<ViewProfileScreen> {
   final coverHeight = 200.0;
   final mobileprofileHeight = 250;
   final webProfileHeight = 400;
@@ -75,7 +75,6 @@ class _ViewProfileScreen extends State<ViewProfileScreen> {
   Future<void> updateSystem(String newSystem) async {
     User newUser = widget.user;
     newUser.system = currentSystem == 'metrico' ? 'imperial' : 'metrico';
-
     try {
       await _updateUser(newUser);
     } catch (e) {
@@ -326,11 +325,25 @@ class _ViewProfileScreen extends State<ViewProfileScreen> {
           top: (circleSize - imageSize) / 2,
           child: Stack(
             children: [
-              CircleAvatar(
-                radius: imageSize / 2,
-                backgroundImage: NetworkImage(widget.user.profile_picture),
-                backgroundColor: Theme.of(context).colorScheme.primary,
+              ClipOval(
+                child: Image.network(
+                  widget.user.profile_picture ?? "",
+                  width: imageSize, // Diámetro del círculo
+                  height: imageSize,
+                  fit: BoxFit
+                      .cover, // Asegúrate de que la imagen cubra el círculo
+                  errorBuilder: (BuildContext context, Object error,
+                      StackTrace? stackTrace) {
+                    return Icon(Icons.account_circle,
+                        size: imageSize); // Ejemplo con un Icono
+                  },
+                ),
               ),
+              // CircleAvatar(
+              //   radius: imageSize / 2,
+              //   backgroundImage: NetworkImage(widget.user.profile_picture),
+              //   backgroundColor: Theme.of(context).colorScheme.primary,
+              // ),
               Positioned(
                 top: 0,
                 child: (EditIcon(
@@ -429,8 +442,10 @@ class _ViewProfileScreen extends State<ViewProfileScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(DateFormat.yMMMMd('es_ES').format(widget.user.birth),
-                style: const TextStyle(fontSize: 16)),
+            widget.user.birth == null
+                ? const Text('No especificado')
+                : Text(DateFormat.yMMMMd('es_ES').format(widget.user.birth!),
+                    style: const TextStyle(fontSize: 16)),
             IconButton(
               icon: const Icon(Icons.edit),
               onPressed: () => _selectDate(context),
@@ -628,10 +643,10 @@ class _ViewProfileScreen extends State<ViewProfileScreen> {
             : [],
       );
     } else {
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: onTap,
+      return GestureDetector(
+        onTap: onTap,
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
           child: Row(
             children: [
               const SizedBox(width: 16),

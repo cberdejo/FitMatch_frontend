@@ -1,5 +1,4 @@
 import 'package:fit_match/models/post.dart';
-import 'package:fit_match/utils/colors.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/widget/chip_section.dart';
 import 'package:fit_match/widget/post_card/star.dart';

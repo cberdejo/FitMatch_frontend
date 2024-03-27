@@ -12,7 +12,7 @@ class PlantillaPostsMethods {
       return PlantillaPost.fromJson(jsonDecode(response.body));
     } else {
       throw Exception(
-          'Error al obtener los posts. Código de estado: ${response.statusCode}');
+          'Error al obtener el post. Código de estado: ${response.statusCode}');
     }
   }
 

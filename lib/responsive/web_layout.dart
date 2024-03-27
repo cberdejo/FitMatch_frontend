@@ -75,16 +75,25 @@ class _WebLayoutState extends State<WebLayout> {
       onTap: () => navigationTapped(4),
       child: Column(
         children: [
-          if (widget.user.profile_picture.isEmpty)
+          if (widget.user.profile_picture == null)
             Icon(
               Icons.person,
               color: (_page == 4) ? primaryContainer : secondaryColor,
               size: 30,
             ),
-          if (widget.user.profile_picture.isNotEmpty)
-            CircleAvatar(
-              backgroundImage: NetworkImage(widget.user.profile_picture),
-              radius: 20,
+          if (widget.user.profile_picture != null)
+            ClipOval(
+              child: Image.network(
+                widget.user.profile_picture!,
+                width: 40, // Diámetro del círculo
+                height: 40,
+                fit:
+                    BoxFit.cover, // Asegúrate de que la imagen cubra el círculo
+                errorBuilder: (BuildContext context, Object error,
+                    StackTrace? stackTrace) {
+                  return const Icon(Icons.account_circle, size: 40);
+                },
+              ),
             ),
           Padding(
             padding: const EdgeInsets.only(top: 8),
