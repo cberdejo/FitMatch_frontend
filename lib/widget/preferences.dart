@@ -59,11 +59,11 @@ class PreferencesCheckboxesWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PreferencesCheckboxesWidgetState createState() =>
-      _PreferencesCheckboxesWidgetState();
+  PreferencesCheckboxesWidgetState createState() =>
+      PreferencesCheckboxesWidgetState();
 }
 
-class _PreferencesCheckboxesWidgetState
+class PreferencesCheckboxesWidgetState
     extends State<PreferencesCheckboxesWidget> {
   late Map<String, bool> _checkboxStates;
 

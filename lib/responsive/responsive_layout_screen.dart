@@ -1,8 +1,9 @@
 import 'package:fit_match/models/user.dart';
 import 'package:flutter/material.dart';
-import 'package:fit_match/responsive/mobile_layout.dart';
 import 'package:fit_match/responsive/web_layout.dart';
 import 'package:fit_match/utils/dimensions.dart';
+
+import 'mobile_layout.dart';
 
 class ResponsiveLayout extends StatefulWidget {
   final int initialPage;
@@ -17,13 +18,18 @@ class ResponsiveLayout extends StatefulWidget {
 
 class _ResponsiveLayoutState extends State<ResponsiveLayout> {
   @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       if (constraints.maxWidth > webScreenSize) {
         return WebLayout(user: widget.user, initialPage: widget.initialPage);
       }
 
-      return mobileLayout(user: widget.user, initialPage: widget.initialPage);
+      return MobileLayout(user: widget.user, initialPage: widget.initialPage);
     });
   }
 }

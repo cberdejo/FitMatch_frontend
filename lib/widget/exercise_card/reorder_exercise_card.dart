@@ -1,4 +1,3 @@
-import 'package:fit_match/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/models/ejercicios.dart';
 
@@ -10,31 +9,40 @@ class ReorderExercises extends StatefulWidget {
       : super(key: key);
 
   @override
-  _ReorderExercisesState createState() => _ReorderExercisesState();
+  ReorderExercisesState createState() => ReorderExercisesState();
 }
 
-class _ReorderExercisesState extends State<ReorderExercises> {
+class ReorderExercisesState extends State<ReorderExercises> {
+  void _navigateBack() {
+    Navigator.of(context).pop(widget.ejerciciosDetalladosAgrupados);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Reordenar Grupos de Ejercicios'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: _navigateBack,
+        ),
       ),
-      body: ReorderableListView(
-        children: widget.ejerciciosDetalladosAgrupados
-            .asMap()
-            .map((index, grupo) =>
-                MapEntry(index, _buildGroupCard(grupo, index)))
-            .values
-            .toList(),
+
+      // Usar ReorderableListView.builder para una gestión más eficiente de los items
+      body: ReorderableListView.builder(
+        itemCount: widget.ejerciciosDetalladosAgrupados.length,
+        itemBuilder: (context, index) {
+          // Construye cada item del grupo de ejercicios
+          final grupo = widget.ejerciciosDetalladosAgrupados[index];
+          return _buildGroupCard(
+              grupo, index); // Asegúrate de pasar el índice correcto
+        },
         onReorder: (int oldIndex, int newIndex) {
           setState(() {
-            if (newIndex > oldIndex) {
-              newIndex -= 1;
-            }
             final EjerciciosDetalladosAgrupados item =
                 widget.ejerciciosDetalladosAgrupados.removeAt(oldIndex);
-            widget.ejerciciosDetalladosAgrupados.insert(newIndex, item);
+            widget.ejerciciosDetalladosAgrupados
+                .insert(newIndex > oldIndex ? newIndex - 1 : newIndex, item);
           });
         },
       ),
@@ -42,10 +50,9 @@ class _ReorderExercisesState extends State<ReorderExercises> {
   }
 
   Widget _buildGroupCard(EjerciciosDetalladosAgrupados grupo, int index) {
+    // Usa el índice o un identificador único del grupo como parte de la Key
     return Card(
-      key: ValueKey(grupo.groupedDetailedExercisedId ??
-          DateTime.now()
-              .millisecondsSinceEpoch), // Asegurarse de tener una key única
+      key: ValueKey('grupo_${grupo.groupedDetailedExercisedId ?? index}'),
       margin: const EdgeInsets.all(8.0),
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -53,50 +60,25 @@ class _ReorderExercisesState extends State<ReorderExercises> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              ' ${index + 1}',
+              'Grupo ${index + 1}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 18.0,
               ),
             ),
             const Divider(),
-            ...grupo.ejerciciosDetallados.asMap().entries.map((entry) {
-              int ejercicioIndex = entry.key;
-              EjercicioDetallado ejercicioDetallado = entry.value;
+            ...grupo.ejerciciosDetallados.map((ejercicioDetallado) {
               return ListTile(
                 title: Text(
-                  '${getExerciseLetter(ejercicioIndex)}. ${ejercicioDetallado.ejercicio?.name ?? 'Ejercicio no especificado'}',
+                  ejercicioDetallado.ejercicio?.name ??
+                      'Ejercicio no especificado',
                   style: const TextStyle(fontSize: 16.0),
                   overflow: TextOverflow.ellipsis,
-                ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () {
-                    _showDialog(
-                        ejercicioDetallado.ejercicio?.description ??
-                            'Sin descripción',
-                        context);
-                  },
                 ),
               );
             }).toList(),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showDialog(String description, BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        content: Text(description),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
       ),
     );
   }

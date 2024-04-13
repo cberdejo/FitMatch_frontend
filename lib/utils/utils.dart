@@ -1,15 +1,22 @@
+import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/providers/get_jwt_token.dart';
+import 'package:fit_match/screens/admin/logs/logs_screen.dart';
+import 'package:fit_match/screens/admin/manageExercises/manage_exercise_screen.dart';
+import 'package:fit_match/screens/admin/viewBanUsers/manage_user_screen.dart';
 import 'package:fit_match/screens/client/home/home.dart';
-import 'package:fit_match/screens/client/profile/profile_screen.dart';
+import 'package:fit_match/screens/client/training/view_training_sessions/exercise/exercise_selection_screen.dart';
+import 'package:fit_match/screens/shared/profile/profile_screen.dart';
 import 'package:fit_match/screens/client/training/view_training_templates/view_training_screen.dart';
+import 'package:fit_match/screens/client/notification/notification_screen.dart';
+import 'package:fit_match/services/sesion_entrenamientos_service.dart';
+import 'package:fit_match/widget/dialog.dart';
+import 'package:fit_match/widget/exercise_info.dart';
 import 'package:fit_match/widget/preferences.dart';
 import 'package:fit_match/models/review.dart';
-import 'package:fit_match/screens/client/discover/view_plantillas_post_screen.dart';
+import 'package:fit_match/screens/shared/discover/view_plantillas_post_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:fit_match/utils/dimensions.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
 
 // for picking up image from gallery
 pickImage(ImageSource source) async {
@@ -118,6 +125,12 @@ List<RadioPreference<String>> experienciaOptions = [
   RadioPreference(title: 'Avanzado', value: 'Avanzado'),
 ];
 
+List<CheckboxPreference> experienciaCheckBox = [
+  CheckboxPreference(title: 'Principiante'),
+  CheckboxPreference(title: 'Intermedio'),
+  CheckboxPreference(title: 'Avanzado'),
+];
+
 List<RadioPreference<String>> equipmentOptions = [
   RadioPreference(title: 'Gimnasio completo', value: 'Gimnasio completo'),
   RadioPreference(title: 'Mancuernas y barras', value: 'Mancuernas y barras'),
@@ -125,6 +138,23 @@ List<RadioPreference<String>> equipmentOptions = [
   RadioPreference(title: 'Solo barras', value: 'Solo barra'),
   RadioPreference(
       title: 'Nada (sin equipamiento)', value: 'Nada (sin equipamiento)'),
+];
+
+List<CheckboxPreference> equipmentCheckBox = [
+  CheckboxPreference(title: 'Gimnasio completo'),
+  CheckboxPreference(title: 'Mancuernas y barras'),
+  CheckboxPreference(title: 'Solo mancuernas'),
+  CheckboxPreference(title: 'Solo barras'),
+  CheckboxPreference(title: 'Nada (sin equipamiento)'),
+];
+
+List<CheckboxPreference> durationCheckBox = [
+  CheckboxPreference(title: '15 minutos o menos'),
+  CheckboxPreference(title: '30 minutos'),
+  CheckboxPreference(title: 'Entre 30 minutos y 1 hora'),
+  CheckboxPreference(title: 'Entre 1 hora  y 1 hora y 30 minutos'),
+  CheckboxPreference(title: 'Entre 1 hora y 30 minutos 2 horas'),
+  CheckboxPreference(title: 'Mas de 2 horas'),
 ];
 
 List<RadioPreference<String>> durationOptions = [
@@ -141,13 +171,24 @@ List<RadioPreference<String>> durationOptions = [
   RadioPreference(title: 'Mas de 2 horas', value: 'Mas de 2 horas'),
 ];
 
-// for displaying screens
+// for displaying screens for client
 List<Widget> buildHomeScreenItems(User user) {
   return [
     HomeScreen(user: user),
     ViewTrainersScreen(user: user),
-    const Text('b'),
+    NotificationScreen(user: user),
     ViewTrainingScreen(user: user),
+    ViewProfileScreen(user: user),
+  ];
+}
+
+// for displaying screens for trainer
+List<Widget> buildAdminScreenItems(User user) {
+  return [
+    LogsScreen(user: user),
+    ManageUserScreen(user: user),
+    ViewTrainersScreen(user: user),
+    ManageExerciseScreen(user: user),
     ViewProfileScreen(user: user),
   ];
 }
@@ -160,14 +201,45 @@ String getExerciseLetter(int index) {
 
 // for getting kg to lbs and viceversa
 
-double fromKgToLbs(double kg) {
+double fromKgToLbs(num kg) {
   return double.parse((kg * 2.20462).toStringAsFixed(2));
 }
 
-double fromCmToInches(double cm) {
+double fromCmToInches(num cm) {
   return double.parse((cm * 0.393701).toStringAsFixed(2));
 }
 
-// for displaying all medidas atributes on a dropdown 
+Future<String?> getIconNameByMuscleGroupId(
+    int muscleGroupId, List<GrupoMuscular> groups) async {
+  if (groups.isEmpty) {
+    groups = await EjerciciosMethods().getGruposMusculares();
+  }
 
+  final GrupoMuscular group = groups.firstWhere(
+    (group) => group.muscleGroupId == muscleGroupId,
+  );
 
+  return group.iconName;
+}
+
+void showDialogExerciseInfo(BuildContext context, String name,
+    String? description, String? imagen, String? videoUrl) async {
+  CustomDialog.show(
+    context,
+    buildInfoWidget(name, description, imagen, videoUrl),
+    () {
+      print('Diálogo cerrado');
+    },
+  );
+}
+
+// PROFILE ID
+int adminId = 1;
+int clientId = 2;
+//REGISTER TYPE ID
+int rangoRepsId = 1;
+int objRepsId = 2;
+int repsMaxId = 3;
+int armrapId = 4;
+int tiempoId = 5;
+int rangoTiempoId = 6;

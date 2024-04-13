@@ -13,10 +13,10 @@ class CustomToggleButtons extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CustomToggleButtonsState createState() => _CustomToggleButtonsState();
+  CustomToggleButtonsState createState() => CustomToggleButtonsState();
 }
 
-class _CustomToggleButtonsState extends State<CustomToggleButtons> {
+class CustomToggleButtonsState extends State<CustomToggleButtons> {
   late List<bool> _selection;
 
   @override

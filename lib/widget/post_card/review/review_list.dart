@@ -1,4 +1,7 @@
+import 'package:expandable_text/expandable_text.dart';
+import 'package:fit_match/models/user.dart';
 import 'package:fit_match/widget/expandable_text.dart';
+import 'package:fit_match/widget/imagen_detailed.dart';
 import 'package:fit_match/widget/post_card/star.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/dimensions.dart';
@@ -12,23 +15,24 @@ import 'package:fit_match/services/review_service.dart';
 
 class ReviewListWidget extends StatefulWidget {
   final List<Review> reviews;
-  final num userId;
+  final User user;
+
   final bool fullScreen;
   final Function onReviewDeleted; // Callback
 
   const ReviewListWidget(
       {Key? key,
       required this.reviews,
-      required this.userId,
+      required this.user,
       this.fullScreen = false,
       required this.onReviewDeleted})
       : super(key: key);
 
   @override
-  _ReviewListWidgetState createState() => _ReviewListWidgetState();
+  ReviewListWidgetState createState() => ReviewListWidgetState();
 }
 
-class _ReviewListWidgetState extends State<ReviewListWidget> {
+class ReviewListWidgetState extends State<ReviewListWidget> {
   final TextEditingController _textController = TextEditingController();
 
   Map<num, bool> commentsVisibility = {};
@@ -119,7 +123,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       if (isLiked) {
         // Llamar al backend para quitar el 'me gusta'
         MeGustaReviews likeToDelete =
-            await likeReview(widget.userId, review.reviewId);
+            await likeReview(widget.user.user_id, review.reviewId);
 
         // Actualizar el estado con los nuevos 'me gusta' una vez confirmado
         setState(() {
@@ -128,7 +132,8 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
         });
       } else {
         // Llamar al backend para dar 'me gusta'
-        MeGustaReviews like = await likeReview(widget.userId, review.reviewId);
+        MeGustaReviews like =
+            await likeReview(widget.user.user_id, review.reviewId);
 
         // Añadir el 'me gusta' a la lista localmente
         setState(() {
@@ -148,7 +153,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       if (isLiked) {
         // Llamar al backend para quitar el 'me gusta'
         MeGustaComentarios likeToDelete =
-            await likeComment(widget.userId, comentario.commentId);
+            await likeComment(widget.user.user_id, comentario.commentId);
 
         // Actualizar el estado con los nuevos 'me gusta' una vez confirmado
         setState(() {
@@ -158,7 +163,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       } else {
         // Llamar al backend para dar 'me gusta'
         MeGustaComentarios like =
-            await likeComment(widget.userId, comentario.commentId);
+            await likeComment(widget.user.user_id, comentario.commentId);
 
         // Añadir el 'me gusta' a la lista localmente
         setState(() {
@@ -376,9 +381,27 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CircleAvatar(
-          backgroundImage: NetworkImage(review.profilePicture),
-          radius: 20,
+        MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(
+            onTap: () => (review.profilePicture != null &&
+                    review.profilePicture!.isNotEmpty)
+                ? Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          ImageDetail(imageData: review.profilePicture!),
+                    ),
+                  )
+                : null,
+            child: (review.profilePicture != null &&
+                    review.profilePicture!.isNotEmpty)
+                ? CircleAvatar(
+                    backgroundImage: NetworkImage(review.profilePicture!),
+                    radius: 20,
+                  )
+                : const Icon(Icons.account_circle, size: 40),
+          ),
         ),
         const SizedBox(width: 8),
         Expanded(
@@ -415,7 +438,9 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               ]),
               widget.fullScreen
                   ? ExpandableText(
-                      text: review.reviewContent,
+                      review.reviewContent,
+                      expandText: 'mostrar más',
+                      collapseText: 'mostrar menos',
                       maxLines: 3,
                     )
                   : Text(
@@ -451,20 +476,21 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
               ),
             ),
           ),
-        Expanded(
-          child: TextButton(
-            onPressed: () => onResponderPressed(review.reviewId),
-            child: Text(
-              activeCommentId == review.reviewId ? "Ocultar" : "Responder",
-              style: TextStyle(color: primaryColor),
-              textScaler: width < webScreenSize
-                  ? const TextScaler.linear(0.8)
-                  : const TextScaler.linear(1.2),
-              overflow: TextOverflow.ellipsis,
+        if (widget.user.profile_id != adminId)
+          Expanded(
+            child: TextButton(
+              onPressed: () => onResponderPressed(review.reviewId),
+              child: Text(
+                activeCommentId == review.reviewId ? "Ocultar" : "Responder",
+                style: TextStyle(color: primaryColor),
+                textScaler: width < webScreenSize
+                    ? const TextScaler.linear(0.8)
+                    : const TextScaler.linear(1.2),
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-        ),
-        if (review.userId == widget.userId)
+        if (review.userId == widget.user.user_id)
           IconButton(
             icon: const Icon(Icons.delete),
             color: Colors.red,
@@ -489,16 +515,34 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   }
 
   Widget _buildCommentItem(ComentarioReview comentario, num width) {
-    final _timeAgo = formatTimeAgo(comentario.timestamp);
+    final timeAgo = formatTimeAgo(comentario.timestamp);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            backgroundImage: NetworkImage(comentario.profilePicture),
-            radius: 20,
+          MouseRegion(
+            cursor: SystemMouseCursors.click,
+            child: GestureDetector(
+              onTap: () => (comentario.profilePicture != null &&
+                      comentario.profilePicture!.isNotEmpty)
+                  ? Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ImageDetail(imageData: comentario.profilePicture!),
+                      ),
+                    )
+                  : null,
+              child: (comentario.profilePicture != null &&
+                      comentario.profilePicture!.isNotEmpty)
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(comentario.profilePicture!),
+                      radius: 20,
+                    )
+                  : const Icon(Icons.account_circle, size: 40),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -515,7 +559,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                             : const TextScaler.linear(1.2)),
                     const SizedBox(width: 4),
                     Text(
-                      "-$_timeAgo",
+                      "-$timeAgo",
                       style: TextStyle(
                           fontSize: 14,
                           color: Theme.of(context).colorScheme.primary),
@@ -527,14 +571,16 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 ),
                 const SizedBox(height: 8),
                 ExpandableText(
-                  text: comentario.content,
+                  comentario.content,
+                  expandText: 'mostrar más',
+                  collapseText: 'mostrar menos',
                   maxLines: 3,
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     _likeComment(comentario),
-                    comentario.userId == widget.userId
+                    comentario.userId == widget.user.user_id
                         ? IconButton(
                             icon: const Icon(Icons.delete),
                             color: Colors.red,
@@ -552,30 +598,35 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
   }
 
   Widget _likeButton(Review review) {
-    bool isLiked = review.meGusta.any((item) => item.userId == widget.userId);
+    bool isLiked =
+        review.meGusta.any((item) => item.userId == widget.user.user_id);
 
-    return LikeButton(
-      size: 25,
-      isLiked: isLiked,
-      likeCount: review.meGusta.length,
-      onTap: (bool isLiked) async {
-        return await handleLikeButtonPress(review, isLiked);
-      },
-    );
+    return widget.user.profile_id != adminId
+        ? LikeButton(
+            size: 25,
+            isLiked: isLiked,
+            likeCount: review.meGusta.length,
+            onTap: (bool isLiked) async {
+              return await handleLikeButtonPress(review, isLiked);
+            },
+          )
+        : const SizedBox.shrink();
   }
 
   Widget _likeComment(ComentarioReview comentario) {
     bool isLiked =
-        comentario.meGusta.any((like) => like.userId == widget.userId);
+        comentario.meGusta.any((like) => like.userId == widget.user.user_id);
 
-    return LikeButton(
-      size: 25,
-      isLiked: isLiked,
-      likeCount: comentario.meGusta.length,
-      onTap: (bool isLiked) async {
-        return await handleLikeCommentButtonPress(comentario, isLiked);
-      },
-    );
+    return widget.user.profile_id != adminId
+        ? LikeButton(
+            size: 25,
+            isLiked: isLiked,
+            likeCount: comentario.meGusta.length,
+            onTap: (bool isLiked) async {
+              return await handleLikeCommentButtonPress(comentario, isLiked);
+            },
+          )
+        : const SizedBox.shrink();
   }
 
   Widget _buildResponderTextField() {
@@ -602,7 +653,7 @@ class _ReviewListWidgetState extends State<ReviewListWidget> {
                 Review activeReview = widget.reviews
                     .firstWhere((review) => review.reviewId == activeReviewId);
                 onAnswerReview(
-                    widget.userId, activeReview, _textController.text);
+                    widget.user.user_id, activeReview, _textController.text);
                 _textController.clear();
               }
             },

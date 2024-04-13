@@ -11,10 +11,10 @@ class WebLayout extends StatefulWidget {
       : super(key: key);
 
   @override
-  _WebLayoutState createState() => _WebLayoutState();
+  WebLayoutState createState() => WebLayoutState();
 }
 
-class _WebLayoutState extends State<WebLayout> {
+class WebLayoutState extends State<WebLayout> {
   int _page = 0;
   late PageController pageController; // for tabs animation
 
@@ -169,35 +169,71 @@ class _WebLayoutState extends State<WebLayout> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Column(
-                    children: [
-                      menuItem(
-                        Icons.home,
-                        'Inicio',
-                        0,
-                        (_page == 0) ? primaryContainer : onSecondaryColor,
-                      ),
-                      menuItem(
-                        Icons.explore,
-                        'Explorar',
-                        1,
-                        (_page == 1) ? primaryContainer : onSecondaryColor,
-                      ),
-                      menuItem(
-                        Icons.favorite,
-                        'Notificaciones',
-                        2,
-                        (_page == 2) ? primaryContainer : onSecondaryColor,
-                      ),
-                      menuItem(
-                        Icons.fitness_center,
-                        'Entrenamientos',
-                        3,
-                        (_page == 3) ? primaryContainer : onSecondaryColor,
-                      ),
-                      profileMenuItem(),
-                    ],
-                  ),
+                  widget.user.profile_id == 1
+                      ? Column(children: [
+                          menuItem(
+                            Icons.history,
+                            'Registros',
+                            0,
+                            (_page == 0) ? primaryContainer : onSecondaryColor,
+                          ),
+                          menuItem(
+                            Icons.person,
+                            'Usuarios',
+                            1,
+                            (_page == 1) ? primaryContainer : onSecondaryColor,
+                          ),
+                          menuItem(
+                            Icons.remove_red_eye_outlined,
+                            'Visualizar plantillas',
+                            2,
+                            (_page == 2) ? primaryContainer : onSecondaryColor,
+                          ),
+                          menuItem(
+                            Icons.fitness_center,
+                            'Ejercicios',
+                            3,
+                            (_page == 3) ? primaryContainer : onSecondaryColor,
+                          ),
+                          profileMenuItem(),
+                        ])
+                      : Column(
+                          children: [
+                            menuItem(
+                              Icons.home,
+                              'Inicio',
+                              0,
+                              (_page == 0)
+                                  ? primaryContainer
+                                  : onSecondaryColor,
+                            ),
+                            menuItem(
+                              Icons.explore,
+                              'Explorar',
+                              1,
+                              (_page == 1)
+                                  ? primaryContainer
+                                  : onSecondaryColor,
+                            ),
+                            menuItem(
+                              Icons.favorite,
+                              'Notificaciones',
+                              2,
+                              (_page == 2)
+                                  ? primaryContainer
+                                  : onSecondaryColor,
+                            ),
+                            menuItem(
+                              Icons.fitness_center,
+                              'Entrenamientos',
+                              3,
+                              (_page == 3)
+                                  ? primaryContainer
+                                  : onSecondaryColor,
+                            ),
+                            profileMenuItem(),
+                          ],
+                        ),
                 ],
               ),
             ),
@@ -207,7 +243,9 @@ class _WebLayoutState extends State<WebLayout> {
             child: PageView(
               controller: pageController,
               onPageChanged: onPageChanged,
-              children: buildHomeScreenItems(widget.user),
+              children: widget.user.profile_id == 1
+                  ? buildAdminScreenItems(widget.user)
+                  : buildHomeScreenItems(widget.user),
             ),
           ),
         ],

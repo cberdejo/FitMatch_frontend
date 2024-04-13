@@ -4,7 +4,7 @@ import 'package:fit_match/models/sesion_entrenamiento.dart';
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/services/registro_service.dart';
 import 'package:fit_match/utils/utils.dart';
-import 'package:fit_match/widget/charts/line_chart_widget.dart';
+import 'package:fit_match/widget/charts/line_chart_widget_zoom.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -87,6 +87,10 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
 
   @override
   Widget build(BuildContext context) {
+    bool showGraphView = widget.session.ejerciciosDetalladosAgrupados != null &&
+        widget.session.ejerciciosDetalladosAgrupados!.length > 1 &&
+        _getRegisterTypeOfActiveDetailedExercise() != armrapId;
+
     List<DropdownMenuItem<int>> dropdownItems = [];
     if (widget.session.ejerciciosDetalladosAgrupados != null) {
       for (var group in widget.session.ejerciciosDetalladosAgrupados!) {
@@ -108,7 +112,7 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
         }
       }
     }
-    int registerTypeId = _getRegisterTypeOfActiveDetailedExercise();
+    // int registerTypeId = _getRegisterTypeOfActiveDetailedExercise();
 
     return Scaffold(
       appBar: AppBar(
@@ -153,17 +157,36 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
           ),
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : Center(child: buildGraphView(context)),
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : buildListView(context),
-        ],
+      body: Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: TabBarView(
+          controller: _tabController,
+          children: showGraphView
+              ? [
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : Center(child: buildGraphView(context)),
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : buildListView(context),
+                ]
+              : [
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : buildNotEnoughData(context),
+                  isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : buildListView(context),
+                ],
+        ),
       ),
+    );
+  }
+
+  Widget buildNotEnoughData(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(8.0),
+      child: const Text("No hay datos suficientes para realizar una gráfica"),
     );
   }
 
@@ -171,38 +194,18 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
     BuildContext context,
   ) {
     int registerTypeId = _getRegisterTypeOfActiveDetailedExercise();
-    return LineChartSample(
+
+    return LineChartZoom(
       registroSet: registros,
       registerTypeId: registerTypeId,
       system: widget.user.system,
     );
+    // return LineChartSample(
+    //   registroSet: registros,
+    //   registerTypeId: registerTypeId,
+    //   system: widget.user.system,
+    // );
   }
-
-  // List<FlSpot> getSpotsFromRegistros(
-  //     List<RegistroSet> registros, int registerTypeId) {
-  //   return registros.asMap().entries.map((entry) {
-  //     // int index = entry.key;
-  //     double value = 0.0; // Inicialización predeterminada
-  //     double date = entry.value.timestamp.millisecondsSinceEpoch.toDouble();
-
-  //     switch (registerTypeId) {
-  //       case 4: // AMRAP: usar 'reps'
-  //         value = entry.value.reps?.toDouble() ?? 0.0;
-  //         break;
-  //       case 5:
-  //         value = entry.value.time ?? 0.0;
-  //       case 6:
-  //         value = entry.value.time ?? 0.0;
-  //         break;
-  //       default: // Otro tipo: usar 'weight' si eso tiene sentido
-  //         value = (entry.value.weight?.toDouble() ?? 0.0) *
-  //             (entry.value.reps?.toDouble() ?? 0.0);
-  //         break;
-  //     }
-
-  //     return FlSpot(date, value);
-  //   }).toList();
-  // }
 
   Widget buildListView(BuildContext context) {
     return Container(
@@ -230,6 +233,9 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
 
                 // Determina los widgets a incluir basado en el tipo de registro
                 List<Widget> rowContent = buildListViewRowContent(registro);
+                if (rowContent.isEmpty) {
+                  return Container();
+                }
 
                 return ListTile(
                   title: Row(
@@ -259,6 +265,17 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
 
   List<Widget> _getTitlesBasedInRegisterType(int registerTypeId) {
     switch (registerTypeId) {
+      case 3:
+        return [
+          const Expanded(
+            child: Text(
+              "Repeticiones",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ];
       case 4: // AMRAP
         return [
           const Expanded(
@@ -334,45 +351,69 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
       ),
     ];
 
+    // Guarda el índice donde comienzan los datos específicos (después de la fecha)
+    final int startIndex = rowContent.length;
+
     switch (_getRegisterTypeOfActiveDetailedExercise()) {
       case 4: // AMRAP
+
         rowContent.add(
           const Expanded(
             child: Text("AMRAP", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         );
+
         break;
       case 5: // Tiempo
-        rowContent.add(
-          Expanded(
-            child: Text("${registro.time} min",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        );
+        if (registro.time == null || registro.time == 0) {
+          rowContent = []; // Vacía la lista si tiempo es 0
+        } else {
+          rowContent.add(
+            Expanded(
+              child: Text("${registro.time} min",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          );
+        }
         break;
       case 6: // Rango de tiempo
-        rowContent.addAll([
-          Expanded(
-            child: Text("${registro.time} min",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            child: Text("${_getWeight(registro.weight!)} ${_getSystemUnit()}",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ]);
+        if ((registro.time ?? 0) == 0 && (registro.weight ?? 0) == 0) {
+          rowContent = []; // Vacía la lista si tiempo y peso son 0
+        } else {
+          rowContent.addAll([
+            Expanded(
+              child: Text("${registro.time ?? 0} min",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Expanded(
+              child: Text(
+                  "${_getWeight(registro.weight ?? 0)} ${_getSystemUnit()}",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ]);
+        }
         break;
       default: // Otro tipo
-        rowContent.addAll([
-          Expanded(
-            child: Text("${registro.reps} reps",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-          Expanded(
-            child: Text("${_getWeight(registro.weight!)} ${_getSystemUnit()}",
-                style: const TextStyle(fontWeight: FontWeight.bold)),
-          ),
-        ]);
+        if ((registro.reps ?? 0) == 0 && (registro.weight ?? 0) == 0) {
+          rowContent = []; // Vacía la lista si reps y peso son 0
+        } else {
+          rowContent.addAll([
+            Expanded(
+              child: Text("${registro.reps ?? 0} reps",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            Expanded(
+              child: Text(
+                  "${_getWeight(registro.weight ?? 0)} ${_getSystemUnit()}",
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ]);
+        }
+    }
+
+    // solo está presente el elemento de fecha, quitarlo también si así lo prefieres.
+    if (rowContent.length == startIndex) {
+      rowContent = [];
     }
 
     return rowContent;
@@ -401,7 +442,7 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
     return listViewTitles;
   }
 
-  _getWeight(double weight) {
+  _getWeight(num weight) {
     if (widget.user.system == 'imperial') {
       return fromKgToLbs(weight);
     } else if (widget.user.system == 'metrico') {
@@ -417,83 +458,3 @@ class _EstadisticasRegistroScreen extends State<EstadisticasRegistroScreen>
     }
   }
 }
-
-
-
-
- // return Padding(
-    //   padding: const EdgeInsets.all(8.0),
-    //   child: LineChart(
-    //     LineChartData(
-    //       gridData: const FlGridData(show: false),
-    //       titlesData: FlTitlesData(
-    //         bottomTitles: AxisTitles(
-    //           sideTitles: SideTitles(
-    //             showTitles: true,
-    //             getTitlesWidget: (value, meta) {
-    //               // Formato para el eje X (tiempo)
-    //               final DateTime date =
-    //                   DateTime.fromMillisecondsSinceEpoch(value.toInt());
-    //               return SideTitleWidget(
-    //                 axisSide: meta.axisSide,
-    //                 child: Text(DateFormat.MMMd().format(date)),
-    //               );
-    //             },
-    //             reservedSize: 32,
-    //           ),
-    //         ),
-    //         leftTitles: AxisTitles(
-    //           sideTitles: SideTitles(
-    //             showTitles: true,
-    //             getTitlesWidget: (value, meta) {
-    //               // Etiquetas para el eje Y varían según el tipo de registro
-    //               String title = "";
-    //               switch (registerTypeId) {
-    //                 case 4: // AMRAP: 'Reps'
-    //                   title = "$value";
-    //                   break;
-    //                 case 5: // Tiempo: 'Minutos'
-    //                   title = "${value.toInt()} min";
-    //                   break;
-    //                 case 6: // Rango de tiempo: igual que tiempo
-    //                   title = "${value.toInt()} min";
-    //                   break;
-    //                 default: // Otro tipo: 'Peso'
-    //                   title = "$value kg";
-    //                   break;
-    //               }
-    //               return SideTitleWidget(
-    //                 axisSide: meta.axisSide,
-    //                 child: Text(title),
-    //               );
-    //             },
-    //             reservedSize: 40,
-    //           ),
-    //         ),
-    //       ),
-    //       borderData: FlBorderData(show: false),
-    //       lineBarsData: [
-    //         LineChartBarData(
-    //           spots: spots,
-    //           isCurved: true,
-    //           color: Theme.of(context).colorScheme.primary,
-    //           dotData: const FlDotData(show: true),
-    //           belowBarData: BarAreaData(show: false),
-    //         ),
-    //       ],
-    //       lineTouchData: const LineTouchData(
-    //         enabled: true,
-    //         touchTooltipData: LineTouchTooltipData(
-    //             // Configuraciones para el tooltip al tocar
-    //             ),
-    //       ),
-    //       // Habilitar el zoom y el desplazamiento
-    //       // Ajusta el rango de zoom y el rango de desplazamiento según lo necesites
-    //       minX: minX,
-    //       maxX: minX + visibleRangeX, // Ajuste basado en el factor de zoom
-    //       minY: minY,
-    //       maxY: minY + visibleRangeY, // Ajuste basado en el factor de zoom
-    //       clipData: const FlClipData.all(),
-    //     ),
-    //   ),
-    // );

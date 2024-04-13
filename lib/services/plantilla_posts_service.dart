@@ -16,24 +16,45 @@ class PlantillaPostsMethods {
     }
   }
 
-  Future<List<PlantillaPost>> getAllPosts(
-      {num? userId,
-      int? page = 1,
-      int? pageSize = 10,
-      bool? isPublic = true,
-      bool? isHidden = false}) async {
-    String url = "$plantillaPostsUrl?page=$page&pageSize=$pageSize";
-    if (userId != null) {
-      url += "&userId=$userId";
-    }
-    if (isPublic != null) {
-      url += "&isPublic=$isPublic";
-    }
-    if (isHidden != null) {
-      url += "&isHidden=$isHidden";
-    }
+  Future<List<PlantillaPost>> getAllPosts({
+    num? userId,
+    int? page = 1,
+    int? pageSize = 10,
+    bool? isPublic,
+    bool? isHidden,
+    String? name,
+    List<String>? experiences,
+    List<String>? objectives,
+    List<String>? interests,
+    List<String>? equipment,
+    List<String>? duration,
+  }) async {
+    // Define la URL base.
+    final String url = "$plantillaPostsUrl";
 
-    final response = await http.get(Uri.parse(url));
+    // Construye el cuerpo de la solicitud como un mapa, que luego se codificará en JSON.
+    final Map<String, dynamic> requestBody = {
+      "page": page,
+      "pageSize": pageSize,
+      if (userId != null) "userId": userId,
+      if (isPublic != null) "isPublic": isPublic,
+      if (isHidden != null) "isHidden": isHidden,
+      if (name != null) "name": name,
+      if (experiences != null) "experience": experiences.join(','),
+      if (objectives != null) "objective": objectives.join(','),
+      if (interests != null) "interests": interests.join(','),
+      if (equipment != null) "equipment": equipment.join(','),
+      if (duration != null) "duration": duration.join(','),
+    };
+
+    // Realiza la solicitud POST con el cuerpo JSON.
+    final response = await http.post(
+      Uri.parse(url),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(requestBody),
+    );
+
+    // Maneja la respuesta.
     if (response.statusCode == 200) {
       final List<dynamic> jsonData = json.decode(response.body) as List;
       return jsonData
@@ -44,6 +65,26 @@ class PlantillaPostsMethods {
     } else {
       throw Exception(
           'Error al obtener los posts. Código de estado: ${response.statusCode}');
+    }
+  }
+
+  Future<bool> duplicatePlantilla({
+    required num userId,
+    required num templateId,
+  }) async {
+    final response = await http.post(
+      Uri.parse(duplicarPlantillaUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'template_id': templateId,
+        'user_id': userId,
+      }),
+    );
+    if (response.statusCode == 201) {
+      return true;
+    } else {
+      throw Exception(
+          'Error al crear la plantilla. Código de estado: ${response.statusCode}');
     }
   }
 

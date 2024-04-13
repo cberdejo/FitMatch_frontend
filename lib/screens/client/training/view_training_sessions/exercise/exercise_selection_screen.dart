@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:collection/collection.dart';
 import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/user.dart';
+import 'package:fit_match/screens/client/training/view_training_sessions/exercise/create_exercise_screen.dart';
 import 'package:fit_match/services/sesion_entrenamientos_service.dart';
 import 'package:fit_match/utils/dimensions.dart';
-import 'package:fit_match/widget/dialog.dart';
+import 'package:fit_match/utils/utils.dart';
+
 import 'package:fit_match/widget/exercise_list_item_seletable.dart';
 import 'package:fit_match/widget/search_widget.dart';
 import 'package:flutter/material.dart';
@@ -13,17 +15,17 @@ import 'package:flutter/material.dart';
 class ExecriseSelectionScreen extends StatefulWidget {
   final User user;
   final int sessionId;
-  final int GroupedDetailedExerciseOrder;
+  final int groupedDetailedExerciseOrder;
   const ExecriseSelectionScreen(
       {super.key,
       required this.user,
       required this.sessionId,
-      required this.GroupedDetailedExerciseOrder});
+      required this.groupedDetailedExerciseOrder});
   @override
-  _ExecriseSelectionScreen createState() => _ExecriseSelectionScreen();
+  ExecriseSelectionState createState() => ExecriseSelectionState();
 }
 
-class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
+class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
   bool _isLoading = false;
   int _currentPage = 1;
   bool _hasMore = true;
@@ -137,16 +139,6 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
     });
   }
 
-  void _showDialog(String description) async {
-    CustomDialog.show(
-      context,
-      Text(description),
-      () {
-        print('Diálogo cerrado');
-      },
-    );
-  }
-
   void _selectExercise(Ejercicios ejercicio) {
     setState(() {
       if (selectedExercisesOrder.containsKey(ejercicio.exerciseId)) {
@@ -156,6 +148,19 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
             selectedExercisesOrder.length + 1;
       }
     });
+  }
+
+  _deleteExercise(Ejercicios exercise) async {
+    try {
+      bool deleted =
+          await EjerciciosMethods().deleteExercise(exercise.exerciseId);
+      if (deleted) {
+        showToast(context, 'El ejercicio ha sido eliminado', exitoso: true);
+      }
+      _resetAndLoadExercises();
+    } catch (e) {
+      print(e);
+    }
   }
 
   void _prepareAndNavigateBack(bool modoSuperSet) {
@@ -178,12 +183,12 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
 
       exercisesGroups.add(EjerciciosDetalladosAgrupados(
         sessionId: widget.sessionId,
-        order: widget.GroupedDetailedExerciseOrder,
+        order: widget.groupedDetailedExerciseOrder,
         ejerciciosDetallados: ejerciciosDetallados,
       ));
     } else {
       // Añadir individualmente
-      int currentOrder = widget.GroupedDetailedExerciseOrder;
+      int currentOrder = widget.groupedDetailedExerciseOrder;
       for (var entry in selectedExercisesOrder.entries) {
         Ejercicios? ejercicios =
             exercises.firstWhereOrNull((e) => e.exerciseId == entry.key);
@@ -246,9 +251,19 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () {},
-              child: Card(
-                color: Theme.of(context).colorScheme.primary,
+              onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => CreateExerciseScreen(
+                  user: widget.user,
+                ),
+              )),
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                margin: const EdgeInsets.only(right: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
                 child: Text(
                   'Crear ejercicio',
                   style: TextStyle(
@@ -287,15 +302,24 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
                   final isSelected = selectedExercisesOrder
                       .containsKey(exercises[index].exerciseId);
                   return BuildExerciseItem(
+                    profiledId: widget.user.profile_id,
+                    userId: widget.user.user_id,
                     ejercicio: exercises[index],
                     isSelected: isSelected,
                     order: selectedExercisesOrder[exercises[index].exerciseId],
+                    onDeletedExercise: () => _deleteExercise(exercises[index]),
                     onSelectedEjercicio: (exercise) =>
                         _selectExercise(exercise),
-                    onPressedInfo: () {
-                      _showDialog(exercises[index].description != null
-                          ? exercises[index].description!
-                          : 'Sin descripción');
+                    onPressedInfo: () async {
+                      String? iconName = await getIconNameByMuscleGroupId(
+                          exercises[index].muscleGroupId, muscleGroups);
+
+                      showDialogExerciseInfo(
+                          context,
+                          exercises[index].name,
+                          exercises[index].description,
+                          iconName,
+                          exercises[index].video);
                     },
                   );
                 } else {
@@ -366,7 +390,6 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int?>(
-          //dropdownColor: Theme.of(context).colorScheme.primaryContainer,
           menuMaxHeight: 300,
           value: selectedMuscleGroupId,
           icon: const Icon(
@@ -391,8 +414,34 @@ class _ExecriseSelectionScreen extends State<ExecriseSelectionScreen> {
             ...muscleGroups.map((group) {
               return DropdownMenuItem<int>(
                 value: group.muscleGroupId,
-                child: Text(
-                  group.name ?? "Sin nombre",
+                child: Container(
+                  constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context)
+                          .size
+                          .width), // Restringe el ancho máximo
+                  child: Row(
+                    mainAxisSize: MainAxisSize
+                        .min, // Usa el espacio mínimo necesario para los hijos
+                    children: [
+                      Flexible(
+                        // Usa Flexible en lugar de Expanded para permitir que el texto se ajuste
+                        child: Text(
+                          group.name ?? "Sin nombre",
+                          overflow: TextOverflow
+                              .ellipsis, // Asegúrate de que el texto no se desborde
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      if (group.iconName != null &&
+                          group.iconName!.isNotEmpty &&
+                          group.muscleGroupId != selectedMuscleGroupId)
+                        Image.asset(
+                          "assets/images/muscle_groups/${group.iconName}.png",
+                          width: 24,
+                          height: 24,
+                        ),
+                    ],
+                  ),
                 ),
               );
             }).toList(),

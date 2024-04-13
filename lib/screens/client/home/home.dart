@@ -3,6 +3,7 @@ import 'package:fit_match/screens/client/home/analiticas/medidas.dart';
 import 'package:fit_match/screens/client/home/historial/historial.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/widget/card_option_home.dart';
+import 'package:fit_match/widget/imagen_detailed.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -146,16 +147,35 @@ class _HomeScreen extends State<HomeScreen> {
           left: (circleSize - imageSize) / 2,
           top: (circleSize - imageSize) / 2,
           child: ClipOval(
-            child: Image.network(
-              widget.user.profile_picture ?? "",
-              width: imageSize, // Diámetro del círculo
-              height: imageSize,
-              fit: BoxFit.cover, // Asegúrate de que la imagen cubra el círculo
-              errorBuilder:
-                  (BuildContext context, Object error, StackTrace? stackTrace) {
-                return Icon(Icons.account_circle,
-                    size: imageSize); // Ejemplo con un Icono
-              },
+            child: MouseRegion(
+              cursor: widget.user.profile_picture != null &&
+                      widget.user.profile_picture!.isNotEmpty
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              child: GestureDetector(
+                onTap: () => widget.user.profile_picture != null &&
+                        widget.user.profile_picture!.isNotEmpty
+                    ? Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ImageDetail(
+                              imageData: widget.user.profile_picture!),
+                        ),
+                      )
+                    : null,
+                child: Image.network(
+                  widget.user.profile_picture ?? "",
+                  width: imageSize, // Diámetro del círculo
+                  height: imageSize,
+                  fit: BoxFit
+                      .cover, // Asegúrate de que la imagen cubra el círculo
+                  errorBuilder: (BuildContext context, Object error,
+                      StackTrace? stackTrace) {
+                    return Icon(Icons.account_circle,
+                        size: imageSize); // Ejemplo con un Icono
+                  },
+                ),
+              ),
             ),
           ),
           //  CircleAvatar(

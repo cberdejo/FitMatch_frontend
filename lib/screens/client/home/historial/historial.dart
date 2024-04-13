@@ -13,10 +13,10 @@ class ViewHistorialScreen extends StatefulWidget {
   const ViewHistorialScreen({Key? key, required this.user}) : super(key: key);
 
   @override
-  _ViewHistorialScreen createState() => _ViewHistorialScreen();
+  ViewHistorialState createState() => ViewHistorialState();
 }
 
-class _ViewHistorialScreen extends State<ViewHistorialScreen> {
+class ViewHistorialState extends State<ViewHistorialScreen> {
   List<SesionEntrenamiento> sesiones = [];
   DateTime?
       selectedDay; // Cambiado para permitir nulo, indicando ninguna selección
@@ -189,32 +189,57 @@ class _ViewHistorialScreen extends State<ViewHistorialScreen> {
           calendarBuilders: CalendarBuilders(
             // Personaliza cómo se muestran los días que tienen sesiones
             defaultBuilder: (context, day, focusedDay) {
-              if (fechasDeSesiones
-                  .any((fechaDeSesion) => isSameDay(fechaDeSesion, day))) {
+              bool isSessionDay = fechasDeSesiones
+                  .any((fechaDeSesion) => isSameDay(fechaDeSesion, day));
+              bool isToday = isSameDay(day, DateTime.now());
+              double containerHeight = isToday ? 60 : 40;
+              // Destacar el día si tiene una sesión programada
+              if (isSessionDay) {
                 return Container(
                   margin: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.symmetric(vertical: 4.0),
+                  height: containerHeight,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: Text(
-                    day.day.toString(),
-                    style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        day.day.toString(),
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.onPrimary),
+                      ),
+                      // Mostrar "Hoy" si el día es el día actual
+                      if (isToday)
+                        Text(
+                          'Hoy',
+                          style: TextStyle(
+                            fontSize:
+                                10, // Tamaño de fuente más pequeño para "Hoy"
+                            color: Theme.of(context).colorScheme.onPrimary,
+                          ),
+                        ),
+                    ],
                   ),
                 );
               } else {
+                // Para días sin sesiones, puedes retornar null o personalizar según necesites
                 return null; // Retorna null para usar el builder por defecto
               }
             },
+
             // Personaliza el día actual
             todayBuilder: (context, day, focusedDay) {
               return Container(
                 margin: const EdgeInsets.all(4.0),
                 alignment: Alignment.center,
-                decoration: const BoxDecoration(
-                  color: Colors.transparent,
+                decoration: BoxDecoration(
+                  color: isSameDay(day, focusedDay)
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.transparent,
                   shape: BoxShape.circle,
                 ),
                 child: Column(

@@ -121,8 +121,7 @@ class RegistroHistorialCard extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                ejerciciosDetallados.ejercicio!.name ??
-                    'Ejercicio no especificado',
+                ejerciciosDetallados.ejercicio!.name,
                 style: const TextStyle(
                   fontSize: 18,
                 ),

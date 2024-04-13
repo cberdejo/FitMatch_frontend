@@ -1,12 +1,17 @@
 import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/utils/dimensions.dart';
+import 'package:fit_match/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class BuildExerciseItem extends StatelessWidget {
+  final num userId;
+  final num profiledId;
   final Ejercicios ejercicio;
   bool isSelected;
   final ValueChanged<Ejercicios> onSelectedEjercicio;
   final void Function() onPressedInfo;
+  void Function()? onEditExercise;
+  final void Function() onDeletedExercise;
   final int? order;
   BuildExerciseItem({
     required this.ejercicio,
@@ -14,6 +19,10 @@ class BuildExerciseItem extends StatelessWidget {
     required this.onSelectedEjercicio,
     required this.onPressedInfo,
     this.order,
+    this.onEditExercise,
+    required this.onDeletedExercise,
+    required this.userId,
+    required this.profiledId,
   });
 
   @override
@@ -47,6 +56,21 @@ class BuildExerciseItem extends StatelessWidget {
                 onPressedInfo();
               },
             ),
+            if ((ejercicio.userId != null && ejercicio.userId == userId) ||
+                (profiledId == adminId)) ...[
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () {
+                  onDeletedExercise();
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.edit),
+                onPressed: () {
+                  onEditExercise!();
+                },
+              ),
+            ]
           ],
         ),
         onTap: () {
@@ -59,7 +83,7 @@ class BuildExerciseItem extends StatelessWidget {
   Widget trailingWidget(BuildContext context) {
     if (isSelected && order != null) {
       return Container(
-        padding: EdgeInsets.all(4),
+        padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
           shape: BoxShape.circle,
@@ -67,7 +91,7 @@ class BuildExerciseItem extends StatelessWidget {
         child: Text(
           order.toString(),
           style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
+            color: Theme.of(context).colorScheme.onPrimary,
             fontSize: 14,
           ),
         ),

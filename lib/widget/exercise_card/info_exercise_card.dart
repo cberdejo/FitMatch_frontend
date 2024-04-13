@@ -16,7 +16,7 @@ Widget buildInfoGroupCard(
           int ejercicioIndex = entry.key;
           EjercicioDetallado ejercicioDetallado = entry.value;
           String letterExercise = grupo.ejerciciosDetallados.length > 1
-              ? '${getExerciseLetter(ejercicioIndex)}'
+              ? getExerciseLetter(ejercicioIndex)
               : '';
           String tituloUnico = '${groupIndex + 1}$letterExercise';
           return Column(
@@ -42,11 +42,20 @@ Widget buildInfoGroupCard(
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.info_outline),
-                    onPressed: () {
-                      _showDialog(
-                          ejercicioDetallado.ejercicio?.description ??
-                              'Sin descripción',
-                          context);
+                    onPressed: () async {
+                      String? iconName =
+                          ejercicioDetallado.ejercicio?.muscleGroupId != null
+                              ? await getIconNameByMuscleGroupId(
+                                  ejercicioDetallado.ejercicio!.muscleGroupId,
+                                  [])
+                              : null;
+
+                      showDialogExerciseInfo(
+                          context,
+                          ejercicioDetallado.ejercicio!.name,
+                          ejercicioDetallado.ejercicio!.description,
+                          iconName,
+                          ejercicioDetallado.ejercicio!.video);
                     },
                   ),
                   subtitle: Text(
@@ -55,21 +64,6 @@ Widget buildInfoGroupCard(
           );
         }).toList(),
       ),
-    ),
-  );
-}
-
-void _showDialog(String description, BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      content: Text(description),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Cerrar'),
-        ),
-      ],
     ),
   );
 }

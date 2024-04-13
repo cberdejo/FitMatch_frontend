@@ -1,8 +1,9 @@
 import 'package:fit_match/models/medidas.dart';
 
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/screens/client/home/analiticas/nuevasMedidas.dart';
+import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
+import 'package:fit_match/widget/imagen_detailed.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -11,10 +12,13 @@ class MedidaCard extends StatelessWidget {
   final Medidas medida;
   final User user;
   final Function(int) onDelete;
-  MedidaCard({
+  final Function(Medidas medida) onEdit;
+  const MedidaCard({
+    super.key,
     required this.medida,
     required this.user,
     required this.onDelete,
+    required this.onEdit,
   });
 
   @override
@@ -54,6 +58,7 @@ class MedidaCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     buildInfoCard(),
+                    buildFotosProgresoSection(context),
                   ],
                 ),
               ),
@@ -125,6 +130,52 @@ class MedidaCard extends StatelessWidget {
     );
   }
 
+  Widget buildFotosProgresoSection(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
+    double imageSize = width < webScreenSize ? 100 : 150;
+    // Verifica si hay fotos de progreso
+    if (medida.fotosProgreso == null || medida.fotosProgreso!.isEmpty) {
+      return Container(); // No mostrar sección si no hay fotos
+    }
+
+    // Muestra las fotos en un GridView o ListView
+    return ExpansionTile(
+      title: const Text(
+        "Fotos de Progreso",
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
+      children: [
+        GridView.builder(
+          shrinkWrap: true,
+          physics:
+              const NeverScrollableScrollPhysics(), // Para que el GridView no sea desplazable
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3, // Número de columnas
+            crossAxisSpacing: 4, // Espaciado horizontal
+            mainAxisSpacing: 4, // Espaciado vertical
+          ),
+          itemCount: medida.fotosProgreso!.length,
+          itemBuilder: (context, index) {
+            var foto = medida.fotosProgreso![index];
+            return GestureDetector(
+                onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ImageDetail(imageData: foto.imagen),
+                      ),
+                    ),
+                child: Image.network(
+                  foto.imagen,
+                  width: imageSize,
+                  height: imageSize,
+                ));
+          },
+        ),
+      ],
+    );
+  }
+
   Widget medidaSection(String title, String description) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -167,22 +218,9 @@ class MedidaCard extends StatelessWidget {
         _onWillPop(context);
 
       case 'editar':
-        _editarMedida(context);
+        onEdit(medida);
         break;
     }
-  }
-
-  void _editarMedida(BuildContext context) async {
-    _navigateToEditMedida(context);
-  }
-
-  void _navigateToEditMedida(BuildContext context) {
-    Navigator.push(
-        context,
-        MaterialPageRoute(
-            builder: (context) => NuevaMedidaScreen(
-                  user: user,
-                )));
   }
 
   Future<bool> _onWillPop(BuildContext context) async {

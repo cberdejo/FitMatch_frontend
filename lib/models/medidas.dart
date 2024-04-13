@@ -1,5 +1,5 @@
 class Medidas {
-  final int? measurementId; //null para crear
+  int? measurementId; //null para crear
   final int userId;
   final double? leftArm;
   final double? rightArm;

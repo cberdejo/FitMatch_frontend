@@ -9,6 +9,7 @@ class User {
   String system;
   String? bio;
   bool public;
+  bool banned;
 
   User({
     required this.user_id,
@@ -21,6 +22,7 @@ class User {
     this.bio,
     required this.profile_id,
     required this.public,
+    required this.banned,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -35,6 +37,7 @@ class User {
       public: json['public'],
       bio: json['bio'],
       system: json['system'],
+      banned: json['banned'],
     );
   }
 }

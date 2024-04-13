@@ -1,3 +1,4 @@
+import 'package:fit_match/models/user.dart';
 import 'package:fit_match/widget/post_card/star.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/dimensions.dart';
@@ -10,29 +11,29 @@ import 'package:fit_match/services/review_service.dart';
 class ReviewSummaryWidget extends StatefulWidget {
   final List<Review> reviews;
   final Function onReviewAdded;
-  final num userId;
+  final User user;
   final int templateId;
 
   const ReviewSummaryWidget({
     Key? key,
     required this.reviews,
-    required this.userId,
+    required this.user,
     required this.templateId,
     required this.onReviewAdded,
   }) : super(key: key);
 
   @override
-  _ReviewSummaryWidgetState createState() => _ReviewSummaryWidgetState();
+  ReviewSummaryWidgetState createState() => ReviewSummaryWidgetState();
 }
 
-class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
+class ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
   void _showReviewInput(BuildContext context, double width) {
     Navigator.of(context).push(
       MaterialPageRoute(
           builder: (context) => ReviewInputWidget(
                 onReviewSubmit: (double rating, String reviewText) async {
-                  await onReviewSubmit(
-                      widget.userId, widget.templateId, rating, reviewText);
+                  await onReviewSubmit(widget.user.user_id, widget.templateId,
+                      rating, reviewText);
                 },
               )),
     );
@@ -80,7 +81,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
     final maxCount = ratingCount.values
         .fold(0, (prev, element) => element > prev ? element : prev);
     final isReviewed =
-        widget.reviews.any((review) => review.userId == widget.userId);
+        widget.reviews.any((review) => review.userId == widget.user.user_id);
 
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
@@ -183,24 +184,26 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
     final onPrimaryColor = Theme.of(context).colorScheme.onPrimary;
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Center(
-        child: ElevatedButton.icon(
-          icon: const Icon(Icons.edit),
-          label: const Text('Escribir una Reseña'),
-          onPressed: () => _showReviewInput(context, width),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            foregroundColor: onPrimaryColor,
-          ),
-        ),
-      ),
+      child: widget.user.profile_id != adminId
+          ? Center(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.edit),
+                label: const Text('Escribir una Reseña'),
+                onPressed: () => _showReviewInput(context, width),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: onPrimaryColor,
+                ),
+              ),
+            )
+          : Container(),
     );
   }
 
   Widget _buildReviewList() {
     List<Review> filteredReviews = widget.reviews.isNotEmpty
         ? widget.reviews
-            .where((element) => element.userId == widget.userId)
+            .where((element) => element.userId == widget.user.user_id)
             .toList()
         : [];
 
@@ -209,7 +212,7 @@ class _ReviewSummaryWidgetState extends State<ReviewSummaryWidget> {
             reviews: filteredReviews.isEmpty
                 ? [widget.reviews.first]
                 : filteredReviews,
-            userId: widget.userId,
+            user: widget.user,
             onReviewDeleted: (int reviewId) {
               setState(() {
                 widget.reviews.removeWhere((item) => item.reviewId == reviewId);

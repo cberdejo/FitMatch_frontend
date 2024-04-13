@@ -134,7 +134,11 @@ class _MedidasScreen extends State<MedidasScreen> {
             Column(
               children: medidas
                   .map((medida) => MedidaCard(
-                      medida: medida, user: widget.user, onDelete: onDelete))
+                        medida: medida,
+                        user: widget.user,
+                        onDelete: onDelete,
+                        onEdit: (medida) => _addMedida(context, medida: medida),
+                      ))
                   .toList(),
             ),
           ],
@@ -143,11 +147,12 @@ class _MedidasScreen extends State<MedidasScreen> {
     }
   }
 
-  _addMedida(BuildContext context) {
+  _addMedida(BuildContext context, {Medidas? medida}) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => NuevaMedidaScreen(user: widget.user),
+        builder: (context) =>
+            NuevaMedidaScreen(user: widget.user, medida: medida),
       ),
     ).then((result) {
       if (result == true) {

@@ -1,69 +1,70 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-class ExpandableText extends StatefulWidget {
-  final String text;
-  final int maxLines;
-  final TextStyle? style;
-  const ExpandableText(
-      {Key? key, required this.text, this.maxLines = 5, this.style})
-      : super(key: key);
+// class ExpandableText extends StatefulWidget {
+//   final String text;
+//   final int maxLines;
+//   final TextStyle? style;
 
-  @override
-  _ExpandableTextState createState() => _ExpandableTextState();
-}
+//   const ExpandableText({
+//     Key? key,
+//     required this.text,
+//     this.maxLines = 5,
+//     this.style,
+//   }) : super(key: key);
 
-class _ExpandableTextState extends State<ExpandableText> {
-  bool isExpanded = false;
-  late TextPainter textPainter;
-  bool shouldShowButton = false;
+//   @override
+//   ExpandableTextState createState() => ExpandableTextState();
+// }
 
-  @override
-  void initState() {
-    super.initState();
-    // Inicializar textPainter aquí sin el maxWidth
-    textPainter = TextPainter(
-      text: TextSpan(text: widget.text),
-      textDirection: TextDirection.ltr,
-      maxLines: widget.maxLines,
-    );
-  }
+// class ExpandableTextState extends State<ExpandableText> {
+//   bool isExpanded = false;
+//   late TextPainter textPainter;
+//   bool shouldShowButton = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // Llamar a layout con maxWidth aquí, donde MediaQuery está disponible
-    textPainter.layout(maxWidth: MediaQuery.of(context).size.width);
-    shouldShowButton = textPainter.didExceedMaxLines;
-  }
+//   @override
+//   void initState() {
+//     super.initState();
+//     textPainter = TextPainter(
+//       text: TextSpan(text: widget.text, style: widget.style),
+//       textDirection: TextDirection.ltr,
+//       maxLines: widget.maxLines,
+//     );
+//   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          widget.text,
-          maxLines: isExpanded ? null : widget.maxLines,
-          overflow: TextOverflow.fade,
-          style: widget.style,
-        ),
-        if (shouldShowButton)
-          Row(
-            children: [
-              const SizedBox(height: 10),
-              TextButton(
-                onPressed: () => setState(() {
-                  isExpanded = !isExpanded;
-                }),
-                child: Text(
-                  isExpanded ? 'Ver menos' : 'Ver más',
-                  style:
-                      TextStyle(color: Theme.of(context).colorScheme.primary),
-                ),
-              ),
-            ],
-          ),
-      ],
-    );
-  }
-}
+//   @override
+//   void didChangeDependencies() {
+//     super.didChangeDependencies();
+//     textPainter.layout(maxWidth: MediaQuery.of(context).size.width - 40);
+//     shouldShowButton = textPainter.didExceedMaxLines;
+//     setState(
+//         () {}); // Asegura que se actualice el estado si es necesario después de calcular shouldShowButton
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Text(
+//           widget.text,
+//           maxLines: isExpanded ? null : widget.maxLines,
+//           overflow: TextOverflow.clip,
+//           style: widget.style,
+//         ),
+//         if (shouldShowButton)
+//           Align(
+//             alignment: Alignment.centerLeft,
+//             child: TextButton(
+//               onPressed: () => setState(() {
+//                 isExpanded = !isExpanded;
+//               }),
+//               child: Text(
+//                 isExpanded ? 'Ver menos' : 'Ver más',
+//                 style: TextStyle(color: Theme.of(context).colorScheme.primary),
+//               ),
+//             ),
+//           ),
+//       ],
+//     );
+//   }
+// }

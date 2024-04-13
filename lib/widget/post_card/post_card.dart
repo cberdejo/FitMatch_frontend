@@ -6,13 +6,13 @@ import 'package:fit_match/services/registro_service.dart';
 import 'package:fit_match/services/review_service.dart';
 import 'package:fit_match/widget/chip_section.dart';
 import 'package:fit_match/widget/custom_button_session.dart';
-import 'package:fit_match/widget/exercise_card/overviewPlantilla.dart';
+import 'package:fit_match/widget/exercise_card/overview_plantilla.dart';
 import 'package:flutter/material.dart';
 import 'package:fit_match/utils/utils.dart';
 import 'package:intl/intl.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/models/post.dart';
-import 'package:fit_match/widget/expandable_text.dart';
+import 'package:expandable_text/expandable_text.dart';
 import '../../models/review.dart';
 import 'review/review_list.dart';
 import 'review/review_summary.dart';
@@ -29,10 +29,10 @@ class PostCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PostCardState createState() => _PostCardState();
+  PostCardState createState() => PostCardState();
 }
 
-class _PostCardState extends State<PostCard> {
+class PostCardState extends State<PostCard> {
   String _selectedOption = 'General';
   bool _isLoading = true; // Indicador de carga general
   bool _isLoadingActivePost = true; //Indicador de carga para el botón de activo
@@ -118,7 +118,7 @@ class _PostCardState extends State<PostCard> {
       MaterialPageRoute(
         builder: (context) => ReviewListWidget(
             reviews: reviews,
-            userId: widget.user.user_id,
+            user: widget.user,
             fullScreen: true,
             onReviewDeleted: (int reviewId) {
               setState(() {
@@ -197,7 +197,7 @@ class _PostCardState extends State<PostCard> {
   @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    final String StateRegister =
+    final String stateRegister =
         _lastSessionIsFinished ? 'Empezar sesión ' : 'Continuar con sesión';
     final String buttonTextName = _lastSessionRegistrada != null
         ? _lastSessionRegistrada!.sessionName
@@ -237,6 +237,7 @@ class _PostCardState extends State<PostCard> {
                         ),
                         const SizedBox(height: 12),
                         _buildContentBasedOnSelection(width),
+                        const SizedBox(height: 80),
                       ],
                     ),
                   ),
@@ -244,7 +245,8 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
           ),
-          if (_lastSessionRegistrada != null)
+          if (_lastSessionRegistrada != null &&
+              widget.user.profile_id != adminId)
             Positioned(
               bottom: 10, // Ajusta la distancia desde el fondo de la pantalla
               left: 0,
@@ -252,7 +254,7 @@ class _PostCardState extends State<PostCard> {
               child: CustomButtonSession(
                   icon: Icons.sports_gymnastics_outlined,
                   onTap: () => {_navigateToRegisterSession()},
-                  text: '$StateRegister $buttonTextName'),
+                  text: '$stateRegister $buttonTextName'),
             ),
         ],
       ),
@@ -286,9 +288,12 @@ class _PostCardState extends State<PostCard> {
         border:
             Border.all(color: Theme.of(context).colorScheme.primary, width: 2),
       ),
-      child: Image.network(
-        widget.post.picture ?? '',
-      ),
+      child: widget.post.picture != null && widget.post.picture!.isNotEmpty
+          ? Image.network(widget.post.picture!)
+          : const Icon(
+              Icons.image,
+              size: 300,
+            ),
     );
   }
 
@@ -317,7 +322,7 @@ class _PostCardState extends State<PostCard> {
           ),
         );
       }).toList(),
-      if (!_isLoadingActivePost)
+      if (!_isLoadingActivePost && widget.user.profile_id != adminId)
         IconButton(
             onPressed: () => _activarPlantilla(),
             icon: _isActive()
@@ -359,6 +364,8 @@ class _PostCardState extends State<PostCard> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        buildSectionTitle('Creado por ${widget.post.username}'),
+        _buildSectionContent(widget.post.bioUser ?? ''),
         if (sectionsMap['Experiencia']!.isNotEmpty)
           buildChipsSection(
               'Experiencia Recomendada', sectionsMap['Experiencia']!),
@@ -380,7 +387,12 @@ class _PostCardState extends State<PostCard> {
   Widget _buildSectionContent(String content) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 8.0),
-      child: ExpandableText(text: content),
+      child: ExpandableText(
+        content,
+        maxLines: 5,
+        expandText: 'mostrar más',
+        collapseText: 'mostrar menos',
+      ),
     );
   }
 
@@ -416,7 +428,7 @@ class _PostCardState extends State<PostCard> {
           margin: const EdgeInsets.symmetric(horizontal: 30.0),
           child: ReviewSummaryWidget(
               reviews: reviews,
-              userId: widget.user.user_id,
+              user: widget.user,
               templateId: widget.post.templateId,
               onReviewAdded: (Review review) {
                 //se añade en local en vez de obtener todas de nuevo

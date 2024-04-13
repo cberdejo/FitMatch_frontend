@@ -32,6 +32,8 @@ class MedidasMethods {
     addFieldIfNotEmpty('left_calve', medidas.leftCalve?.toString());
     addFieldIfNotEmpty('right_calve', medidas.rightCalve?.toString());
     addFieldIfNotEmpty('weight', medidas.weight?.toString());
+    addFieldIfNotEmpty('left_forearm', medidas.leftForearm?.toString());
+    addFieldIfNotEmpty('right_forearm', medidas.rightForearm?.toString());
     addFieldIfNotEmpty('timestamp', medidas.timestamp?.toIso8601String());
 
     // Añade las imágenes si existen
@@ -87,7 +89,7 @@ class MedidasMethods {
     required Medidas medidas,
     List<Uint8List>? pictures,
   }) async {
-    var uri = Uri.parse('medidasUrl/${medidas.measurementId}');
+    var uri = Uri.parse('$medidasUrl/${medidas.measurementId}');
     var request = http.MultipartRequest('PUT', uri);
 
     // Función auxiliar para añadir campos si no están vacíos
@@ -98,9 +100,11 @@ class MedidasMethods {
     }
 
     // Añadir campos condicionalmente
-    addFieldIfNotEmpty('user_id', medidas.userId?.toString());
+    addFieldIfNotEmpty('user_id', medidas.userId.toString());
     addFieldIfNotEmpty('left_arm', medidas.leftArm?.toString());
     addFieldIfNotEmpty('right_arm', medidas.rightArm?.toString());
+    addFieldIfNotEmpty('left_forearm', medidas.leftForearm?.toString());
+    addFieldIfNotEmpty('right_forearm', medidas.rightForearm?.toString());
     addFieldIfNotEmpty('shoulders', medidas.shoulders?.toString());
     addFieldIfNotEmpty('neck', medidas.neck?.toString());
     addFieldIfNotEmpty('chest', medidas.chest?.toString());

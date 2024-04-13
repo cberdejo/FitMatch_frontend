@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/utils/utils.dart';
-import 'package:fit_match/widget/dialog.dart';
 import 'package:fit_match/widget/number_input_field.dart';
 
 // import 'package:fit_match/widget/exercise_card/sets_list.dart';
@@ -33,10 +32,10 @@ class ExerciseCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ExerciseCard createState() => _ExerciseCard();
+  ExerciseCardState createState() => ExerciseCardState();
 }
 
-class _ExerciseCard extends State<ExerciseCard> {
+class ExerciseCardState extends State<ExerciseCard> {
   Map<int, int> selectedRegisterTypes = {};
   Map<int, TextEditingController> noteControllers = {};
   Map<int, bool> showNote = {};
@@ -46,6 +45,17 @@ class _ExerciseCard extends State<ExerciseCard> {
   void initState() {
     super.initState();
     initControladores();
+  }
+
+  @override
+  void didUpdateWidget(covariant ExerciseCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Comprobar si los ejercicios detallados han cambiado.
+    if (oldWidget.ejercicioDetalladoAgrupado !=
+        widget.ejercicioDetalladoAgrupado) {
+      initControladores();
+    }
   }
 
   void initControladores() {
@@ -93,14 +103,6 @@ class _ExerciseCard extends State<ExerciseCard> {
         });
         break;
     }
-  }
-
-  void _showDialog(String description, BuildContext context) async {
-    CustomDialog.show(
-      context,
-      Text(description),
-      () {},
-    );
   }
 
   void _onEditNote(int groupIndex, int exerciseIndex, String note) {
@@ -205,11 +207,20 @@ class _ExerciseCard extends State<ExerciseCard> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.info_outline),
-                    onPressed: () {
-                      _showDialog(
-                          ejercicioDetallado.ejercicio!.description ??
-                              'Sin descripción',
-                          context);
+                    onPressed: () async {
+                      String? iconName =
+                          ejercicioDetallado.ejercicio?.muscleGroupId != null
+                              ? await getIconNameByMuscleGroupId(
+                                  ejercicioDetallado.ejercicio!.muscleGroupId,
+                                  [])
+                              : null;
+
+                      showDialogExerciseInfo(
+                          context,
+                          ejercicioDetallado.ejercicio!.name,
+                          ejercicioDetallado.ejercicio!.description,
+                          iconName,
+                          ejercicioDetallado.ejercicio!.video);
                     },
                     constraints: const BoxConstraints(),
                     alignment: Alignment.centerRight,
@@ -353,10 +364,10 @@ class SetRow extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SetRowState createState() => _SetRowState();
+  SetRowState createState() => SetRowState();
 }
 
-class _SetRowState extends State<SetRow> {
+class SetRowState extends State<SetRow> {
   late TextEditingController minController;
   late TextEditingController maxController;
   Timer? _debounce;

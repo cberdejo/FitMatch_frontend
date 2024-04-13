@@ -1,6 +1,6 @@
 import 'package:fit_match/models/user.dart';
 import 'package:fit_match/responsive/responsive_layout_screen.dart';
-import 'package:fit_match/widget/edit_Icon.dart';
+import 'package:fit_match/widget/edit_icon.dart';
 import 'package:flutter/material.dart';
 
 import 'package:flutter/services.dart';
@@ -32,7 +32,7 @@ class RegisterScreenState extends State<RegisterScreen> {
   final _otpController = TextEditingController();
 
   SharedPreferences? _preferences;
-  bool _isLoading = false;
+  bool isLoading = false;
   Uint8List? _image;
   int _currentStep = 0; //stepper
 
@@ -63,7 +63,7 @@ class RegisterScreenState extends State<RegisterScreen> {
 
   Future<bool> _checkMailDoesntExist() async {
     bool res =
-        await UserMethods().UserWithEmailDoesntExists(_emailController.text);
+        await UserMethods().userWithEmailDoesntExists(_emailController.text);
     return res;
   }
 
@@ -72,7 +72,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     if (!isOtpValid) {
       // Manejar el caso de OTP inválido.
       showToast(context, 'Código de verificación incorrecto', exitoso: false);
-      setState(() => _isLoading = false); // Asegúrate de detener la carga aquí.
+      setState(() => isLoading = false); // Asegúrate de detener la carga aquí.
       return;
     }
     // Si el OTP es válido, procede al registro.
@@ -81,7 +81,7 @@ class RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _signUpUser() async {
     if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
+      setState(() => isLoading = true);
 
       try {
         // Convertir las preferencias en objetos Emparejamiento
@@ -91,7 +91,7 @@ class RegisterScreenState extends State<RegisterScreen> {
           username: _usernameController.text,
           email: _emailController.text,
           password: _pswController.text,
-          profileId: 2, //2 es el profile del cliente
+          profileId: clientId, //2 es el profile del cliente
           birth: _dobController.text,
           profilePicture: _image,
         );
@@ -106,13 +106,13 @@ class RegisterScreenState extends State<RegisterScreen> {
       } catch (e) {
         print('Error al crear el usuario: $e');
       } finally {
-        setState(() => _isLoading = false);
+        setState(() => isLoading = false);
       }
     }
   }
 
   Future<void> _autoLogin() async {
-    setState(() => _isLoading = true);
+    setState(() => isLoading = true);
     try {
       String loginResult = await AuthMethods().loginUser(
         email: _emailController.text,
@@ -128,7 +128,7 @@ class RegisterScreenState extends State<RegisterScreen> {
     } catch (error) {
       print("Error inesperado: $error");
     } finally {
-      setState(() => _isLoading =
+      setState(() => isLoading =
           false); // Detén la carga después de la operación de inicio de sesión.
     }
   }
@@ -143,6 +143,7 @@ class RegisterScreenState extends State<RegisterScreen> {
         Navigator.of(context).pushReplacement(MaterialPageRoute(
           builder: (context) => ResponsiveLayout(
             user: user,
+            initialPage: 0,
           ),
         ));
       }
@@ -172,6 +173,7 @@ class RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // ignore: deprecated_member_use
     return WillPopScope(
       onWillPop: () async {
         // Redirigir al login al presionar el botón de retroceso

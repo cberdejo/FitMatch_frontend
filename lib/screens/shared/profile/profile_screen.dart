@@ -7,7 +7,7 @@ import 'package:fit_match/screens/shared/login_screen.dart';
 import 'package:fit_match/services/auth_service.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
-import 'package:fit_match/widget/edit_Icon.dart';
+import 'package:fit_match/widget/edit_icon.dart';
 import 'package:fit_match/widget/text_field_input.dart';
 
 import 'package:flutter/material.dart';
@@ -204,6 +204,14 @@ class ViewProfileState extends State<ViewProfileScreen> {
             isExpandable: true,
             contentExpanded: buildSeguridad(),
           ),
+          if (widget.user.profile_id == adminId)
+            _buildOptionItem(
+              icon: Icons.admin_panel_settings,
+              onTap: () {},
+              title: 'Crear credenciales de admin',
+              isExpandable: true,
+              contentExpanded: buildAdminOptions(),
+            ),
           _buildOptionItem(
             icon: Icons.logout,
             onTap: () {
@@ -625,7 +633,7 @@ class ViewProfileState extends State<ViewProfileScreen> {
         fontSize: 14, color: Theme.of(context).colorScheme.onBackground);
     const contentPadding = EdgeInsets.symmetric(vertical: 0, horizontal: 16);
 
-    final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
+    // final primaryContainer = Theme.of(context).colorScheme.primaryContainer;
     if (isExpandable) {
       return ExpansionTile(
         leading: Icon(icon,
@@ -664,38 +672,125 @@ class ViewProfileState extends State<ViewProfileScreen> {
     }
   }
 
-  // Widget _buildOptionItem({
-  //   required IconData icon,
-  //   required String title,
-  //   VoidCallback? onTap,
-  //   Color? iconColor,
-  //   bool arrow = true,
-  //   bool isExpandable = false,
-  //   Widget? contentExpanded,
-  // }) {
-  //   if (isExpandable) {
-  //     return ExpansionTile(
-  //       leading: Icon(icon, color: iconColor),
-  //       title: Text(title),
-  //       children: contentExpanded != null ? [contentExpanded] : [],
-  //     );
-  //   } else {
-  //     return MouseRegion(
-  //       cursor: SystemMouseCursors.click,
-  //       child: GestureDetector(
-  //         onTap: onTap,
-  //         child: Row(
-  //           children: [
-  //             Icon(icon, color: iconColor),
-  //             const SizedBox(width: 8), // Espacio entre el ícono y el texto
-  //             Text(title),
+  Widget buildAdminOptions() {
+    // Controladores para los campos de texto
+    final TextEditingController userNameController = TextEditingController();
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+    final TextEditingController confirmController = TextEditingController();
+    final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  //             const Spacer(), // Espacio para que la flecha se alinee a la derecha
-  //             if (arrow == true) const Icon(Icons.arrow_forward_ios), // Flecha
-  //           ],
-  //         ),
-  //       ),
-  //     );
-  //   }
-  // }
+    // Función para mostrar el diálogo de confirmación
+    Future<bool> showConfirmationDialog() async {
+      return (await showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Confirmar Acción'),
+              content: const Text(
+                  '¿Estás seguro de que quieres crear un nuevo administrador?'),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancelar'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Confirmar'),
+                ),
+              ],
+            ),
+          )) ??
+          false;
+    }
+
+    Future<bool> _checkMailDoesntExist() async {
+      bool res =
+          await UserMethods().userWithEmailDoesntExists(emailController.text);
+      return res;
+    }
+
+    // Función para crear el administrador
+    Future<void> createAdmin() async {
+      if (_formKey.currentState!.validate()) {
+        bool confirmed = await showConfirmationDialog();
+        if (confirmed) {
+          bool mailIsUnique = await _checkMailDoesntExist();
+          if (mailIsUnique) {
+            AuthMethods().createUsuario(
+                username: userNameController.text,
+                email: emailController.text,
+                password: passwordController.text,
+                profileId: adminId,
+                birth: DateTime.now().toString(),
+                profilePicture: null);
+            showToast(context, 'Administrador creado', exitoso: true);
+
+            // Limpiar los campos
+            userNameController.clear();
+            emailController.clear();
+            passwordController.clear();
+            confirmController.clear();
+          } else {
+            showToast(context, 'El correo ya existe, prueba con otro',
+                exitoso: false);
+          }
+        }
+      }
+    }
+
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: userNameController,
+            decoration: const InputDecoration(labelText: 'Nombre de usuario'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, ingrese el nombre de usuario';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: emailController,
+            decoration: const InputDecoration(labelText: 'Correo Electrónico'),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, ingrese el correo electrónico';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: passwordController,
+            decoration: const InputDecoration(labelText: 'Contraseña'),
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Por favor, ingrese la contraseña';
+              }
+              return null;
+            },
+          ),
+          TextFormField(
+            controller: confirmController,
+            decoration:
+                const InputDecoration(labelText: 'Confirmar Contraseña'),
+            obscureText: true,
+            validator: (value) {
+              if (value != passwordController.text) {
+                return 'Las contraseñas no coinciden';
+              }
+              return null;
+            },
+          ),
+          ElevatedButton(
+            onPressed: createAdmin,
+            child: const Text('Crear Administrador'),
+          ),
+        ],
+      ),
+    );
+  }
 }

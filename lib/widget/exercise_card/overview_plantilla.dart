@@ -19,10 +19,10 @@ class OverviewPlantilla extends StatefulWidget {
     required this.templateName,
   });
   @override
-  _OverviewPlantilla createState() => _OverviewPlantilla();
+  OverviewPlantillaState createState() => OverviewPlantillaState();
 }
 
-class _OverviewPlantilla extends State<OverviewPlantilla> {
+class OverviewPlantillaState extends State<OverviewPlantilla> {
   List<SesionEntrenamiento> sesiones = [];
 
   @override
@@ -53,9 +53,9 @@ class _OverviewPlantilla extends State<OverviewPlantilla> {
     }
   }
 
-  void _navigateBack() {
-    Navigator.pop(context);
-  }
+  // void _navigateBack() {
+  //   Navigator.pop(context);
+  // }
 
   @override
   Widget build(BuildContext context) {

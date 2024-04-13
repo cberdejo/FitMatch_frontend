@@ -53,7 +53,7 @@ class LoginScreenState extends State<LoginScreen> {
         _navigateToHome();
       } else {
         print("Error de autenticación: $result");
-        showToast(context, "$result", exitoso: false);
+        showToast(context, result, exitoso: false);
       }
     } catch (error) {
       print("Error inesperado: $error");
@@ -73,6 +73,7 @@ class LoginScreenState extends State<LoginScreen> {
           Navigator.of(context).pushReplacement(MaterialPageRoute(
             builder: (context) => ResponsiveLayout(
               user: user,
+              initialPage: 0,
             ),
           ));
         }

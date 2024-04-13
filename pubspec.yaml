@@ -31,6 +31,7 @@ dependencies:
   collection: ^1.18.0
   cupertino_icons: ^1.0.6
   emoji_picker_flutter: ^1.6.3
+  expandable_text: ^2.3.0
   fl_chart: ^0.66.2
   flutter:
     sdk: flutter
@@ -43,8 +44,12 @@ dependencies:
   jwt_decoder: ^2.0.1
   like_button: ^2.0.5
   liquid_pull_to_refresh: ^3.0.1
-  provider: ^6.1.1
+  path_provider: ^2.1.2
+  provider: ^6.1.2
+  syncfusion_flutter_charts: ^25.1.38
   table_calendar: ^3.0.9
+  video_player: ^2.8.3
+  youtube_player_iframe: ^4.0.4
 
 dev_dependencies:
   flutter_lints: ^2.0.0
@@ -61,10 +66,8 @@ flutter:
   uses-material-design: true
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/images/logo.png
-    - assets/images/user_placeholder.png
-    - assets/images/icon.png
-    - assets/images/template_placeholder.png
+    - assets/images/
+    - assets/images/muscle_groups/
     - assets/themes/dark_theme.json
     - assets/themes/light_theme.json
   #   - images/a_dot_burr.jpeg

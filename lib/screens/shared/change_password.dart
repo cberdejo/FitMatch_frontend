@@ -21,7 +21,7 @@ class ForgotPasswordState extends State<ForgotPasswordScreen> {
 
   Future<bool> _checkMailDoesntExist() async {
     bool res =
-        await UserMethods().UserWithEmailDoesntExists(_emailController.text);
+        await UserMethods().userWithEmailDoesntExists(_emailController.text);
     return res;
   }
 

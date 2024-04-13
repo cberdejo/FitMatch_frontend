@@ -6,6 +6,7 @@ import 'package:fit_match/utils/utils.dart';
 import 'package:fit_match/widget/post_card/post_card.dart';
 
 import 'package:fit_match/widget/post_card/preview_post_card.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:liquid_pull_to_refresh/liquid_pull_to_refresh.dart';
@@ -15,10 +16,10 @@ class ViewTrainingScreen extends StatefulWidget {
   const ViewTrainingScreen({super.key, required this.user});
 
   @override
-  _ViewTrainingScreen createState() => _ViewTrainingScreen();
+  ViewTrainingState createState() => ViewTrainingState();
 }
 
-class _ViewTrainingScreen extends State<ViewTrainingScreen>
+class ViewTrainingState extends State<ViewTrainingScreen>
     with SingleTickerProviderStateMixin {
   List<PlantillaPost> trainingTemplates = [];
   List<PlantillaPost> createdTrainingTemplates = [];
@@ -74,6 +75,18 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
           builder: (context) => CreateProgramScreen(
               user: widget.user, templateId: template.templateId)),
     );
+  }
+
+  void _duplicar(int templateId) async {
+    try {
+      await PlantillaPostsMethods().duplicatePlantilla(
+          userId: widget.user.user_id, templateId: templateId);
+
+      showToast(context, 'Plantilla duplicada correctamente');
+      _loadTrainingTemplates();
+    } catch (e) {
+      showToast(context, 'Error al duplicar la plantilla', exitoso: false);
+    }
   }
 
   void _publicar(PlantillaPost template) async {
@@ -165,12 +178,23 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
     super.initState();
     _loadTrainingTemplates();
     _tabController = TabController(length: 3, vsync: this);
+
+    // Añade un listener para escuchar cambios en la selección de pestañas.
+    _tabController.addListener(() {
+      // Llama a setState cada vez que el índice del controlador cambia.
+      // Esto asegura que la UI se actualice correctamente para mostrar/ocultar
+      // el FloatingActionButton en respuesta a cambios de pestaña.
+      setState(() {
+        // Este bloque puede permanecer vacío o puedes usarlo para ejecutar
+        // código adicional cuando cambie la pestaña, si es necesario.
+      });
+    });
   }
 
   @override
   void dispose() {
-    super.dispose();
     _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -227,38 +251,27 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
         lista = arhivedTrainingTemplates;
         break;
     }
-
-    return LiquidPullToRefresh(
-      onRefresh: _loadTrainingTemplates,
-      color: Theme.of(context).colorScheme.primary,
-      child: ListView(
-        children: [
-          ...lista
-              .map((template) => _buildListItem(width, template, tipo))
-              .toList(),
-          if (tipo == 'Creados')
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: FloatingActionButton(
-                  onPressed: _createNewTemplate,
-                  child: const Icon(Icons.add),
-                ),
-              ),
-            ),
-        ],
-      ),
+    Widget liswViewWithListItem = ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        ...lista
+            .map((template) => _buildListItem(width, template, tipo))
+            .toList(),
+      ],
     );
+    return kIsWeb
+        ? liswViewWithListItem
+        : LiquidPullToRefresh(
+            onRefresh: _loadTrainingTemplates,
+            color: Theme.of(context).colorScheme.primary,
+            child: liswViewWithListItem);
   }
 
   Widget _buildListItem(double width, PlantillaPost template, String tipo) {
-    return buildPostItem(
-      template,
-      width,
-      showPost: () => tipo == 'Activos'
-          ? _verMas(template)
-          : (tipo == 'Creados' ? _editTemplate(template) : null),
+    return PreviewPostItem(
+      post: template,
+      showPost: () => _verMas(template),
+      // : (tipo == 'Creados' ? _editTemplate(template) : null),
       trailing: PopupMenuButton<String>(
         color: Theme.of(context).colorScheme.primary,
         onSelected: (value) => _handleMenuItemSelected(value, template),
@@ -288,6 +301,11 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
               child: Text('Eliminar',
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.background))),
+          PopupMenuItem<String>(
+              value: 'duplicar',
+              child: Text('Duplicar',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.background))),
         ];
       case "Creados":
         String labelPublic = template.picture == null || !template.public
@@ -308,7 +326,12 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
               value: 'publicar',
               child: Text(labelPublic,
                   style: TextStyle(
-                      color: Theme.of(context).colorScheme.background)))
+                      color: Theme.of(context).colorScheme.background))),
+          PopupMenuItem<String>(
+              value: 'duplicar',
+              child: Text('Duplicar',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.background))),
         ];
       case "Archivados":
         return [
@@ -325,6 +348,11 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
           PopupMenuItem<String>(
               value: 'activar',
               child: Text('Activar',
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.background))),
+          PopupMenuItem<String>(
+              value: 'duplicar',
+              child: Text('Duplicar',
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.background))),
         ];
@@ -358,6 +386,10 @@ class _ViewTrainingScreen extends State<ViewTrainingScreen>
 
       case 'delete_guardados':
         _delete(template.templateId, 'guardadas');
+        break;
+
+      case 'duplicar':
+        _duplicar(template.templateId);
         break;
     }
   }

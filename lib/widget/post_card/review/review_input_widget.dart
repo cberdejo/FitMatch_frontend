@@ -8,10 +8,10 @@ class ReviewInputWidget extends StatefulWidget {
       : super(key: key);
 
   @override
-  _ReviewInputWidgetState createState() => _ReviewInputWidgetState();
+  ReviewInputWidgetState createState() => ReviewInputWidgetState();
 }
 
-class _ReviewInputWidgetState extends State<ReviewInputWidget> {
+class ReviewInputWidgetState extends State<ReviewInputWidget> {
   final TextEditingController _textController = TextEditingController();
   double _currentRating = 3; // Valor inicial de la calificación
 

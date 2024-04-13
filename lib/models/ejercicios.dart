@@ -86,36 +86,44 @@ class EjercicioDetallado {
 
 class Ejercicios {
   final int exerciseId;
-  final String name;
-  final String? description;
-  final int muscleGroupId;
-  final int? materialId;
+  final int? userId;
+  String name;
+  String? description;
+  int muscleGroupId;
+  int? materialId;
+  String? video;
 
   Ejercicios({
     required this.exerciseId,
+    this.userId,
     required this.name,
     this.description,
     required this.muscleGroupId,
     this.materialId,
+    this.video,
   });
 
   factory Ejercicios.fromJson(Map<String, dynamic> json) {
     return Ejercicios(
       exerciseId: json['exercise_id'],
+      userId: json['user_id'],
       name: json['name'],
       description: json['description'],
       muscleGroupId: json['muscle_group_id'],
       materialId: json['material_id'],
+      video: json['video'],
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      'user_id': userId,
       'exercise_id': exerciseId,
       'name': name,
       'description': description,
       'muscle_group_id': muscleGroupId,
       'material_id': materialId,
+      'video': video,
     };
   }
 }
@@ -126,11 +134,11 @@ class SetsEjerciciosEntrada {
   List<RegistroSet>? registroSet;
   int setOrder;
   int? reps;
-  double? time;
+  num? time;
   int? minReps;
   int? maxReps;
-  double? minTime;
-  double? maxTime;
+  num? minTime;
+  num? maxTime;
 
   SetsEjerciciosEntrada({
     this.setId,
@@ -207,11 +215,13 @@ class TipoDeRegistro {
 class GrupoMuscular {
   final int muscleGroupId;
   final String? name;
+  final String? iconName;
   //final List<Ejercicios> ejercicios;
 
   GrupoMuscular({
     required this.muscleGroupId,
     this.name,
+    this.iconName,
     //required this.ejercicios,
   });
 
@@ -219,6 +229,7 @@ class GrupoMuscular {
     return GrupoMuscular(
       muscleGroupId: json['muscle_group_id'],
       name: json['name'],
+      iconName: json['icon_name'],
       /* 
      ejercicios: (json['ejercicios'] as List)
           .map((ejercicio) => Ejercicios.fromJson(ejercicio))
@@ -231,6 +242,7 @@ class GrupoMuscular {
     return {
       'muscle_group_id': muscleGroupId,
       'name': name,
+      'icon_name': iconName,
       //'ejercicios': ejercicios.map((ejercicio) => ejercicio.toJson()).toList(),
     };
   }

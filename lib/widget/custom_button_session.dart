@@ -13,10 +13,10 @@ class CustomButtonSession extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _CustomButtonSession createState() => _CustomButtonSession();
+  CustomButtonSessionState createState() => CustomButtonSessionState();
 }
 
-class _CustomButtonSession extends State<CustomButtonSession> {
+class CustomButtonSessionState extends State<CustomButtonSession> {
   bool _isHovering = false;
 
   @override

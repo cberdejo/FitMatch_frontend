@@ -1,5 +1,7 @@
-// const url = 'http://10.0.2.2:3000/';
-const url = 'http://localhost:3000/';
+//const url = 'http://10.0.2.2:3000/';
+import 'package:flutter/foundation.dart';
+
+const url = kIsWeb ? 'http://localhost:3000/' : 'http://10.0.2.2:3000/';
 
 // Authentication
 const loginUrl = '${url}verificar';
@@ -11,9 +13,13 @@ const sendOtpUrl = '${url}otp/send';
 // User Management
 const usuariosUrl = '${url}usuarios';
 const usuarioTokenUrl = '${url}usuarioToken';
+const banUserUrl = '${url}usuarios/ban';
 
 // Plantilla (Template) Management
 const plantillaPostsUrl = '${url}plantillaPosts';
+
+//Duplicar plantilla
+const duplicarPlantillaUrl = '${url}duplicatePlantilla';
 
 //Plantilla toggle publico
 const plantillaPublicoUrl = '${url}plantillaPostsPublic';
@@ -77,3 +83,12 @@ const registrosSessionPlantillaUrl = '${url}registrosSessionPlantilla';
 
 //medidas
 const medidasUrl = '${url}medidas';
+
+//notificaciones
+const notificacionUrl = '${url}notificacion';
+
+//logs
+const logsUrl = '${url}logs';
+
+//bloqueos
+const bloqueosUrl = '${url}bloqueos';

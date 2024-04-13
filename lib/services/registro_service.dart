@@ -103,35 +103,59 @@ class RegistroMethods {
     }
   }
 
-  Future<RegistroSet> addOrUpdateRegisterSet({
+  Future<RegistroSet> addRegisterSet({
     required int userId,
     required int registerSessionId,
     required int setId,
-    bool? create,
-    int? registerSetId,
     int? reps,
-    double? weight,
-    double? time,
+    num? weight,
+    num? time,
   }) async {
     final response = await http.post(
       Uri.parse(registrosUrl),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
-        'create': create,
         'user_id': userId,
         'register_session_id': registerSessionId,
         'set_id': setId,
-        'register_set_id': registerSetId,
         'reps': reps,
         'weight': weight,
         'time': time,
       }),
     );
+
     if (response.statusCode == 200) {
       return RegistroSet.fromJson(jsonDecode(response.body));
     } else {
       throw Exception(
-          'Error al añadir o actualizar el registro de set: ${response.statusCode}');
+          'Error al añadir el registro de set: ${response.statusCode}');
+    }
+  }
+
+  Future<RegistroSet> updateRegisterSet({
+    required int registerSetId,
+    required int userId,
+    int? reps,
+    num? weight,
+    num? time,
+  }) async {
+    final response = await http.post(
+      Uri.parse(registrosUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'register_set_id': registerSetId,
+        'user_id': userId,
+        'reps': reps,
+        'weight': weight,
+        'time': time,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return RegistroSet.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception(
+          'Error al actualizar el registro de set: ${response.statusCode}');
     }
   }
 

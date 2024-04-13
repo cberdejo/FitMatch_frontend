@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 class DatepickerWidget extends StatefulWidget {
   final TextEditingController controller;
 
-  const DatepickerWidget({Key? key, required this.controller}) : super(key: key);
+  const DatepickerWidget({Key? key, required this.controller})
+      : super(key: key);
 
   @override
-  _DatepickerWidgetState createState() => _DatepickerWidgetState();
+  DatepickerWidgetState createState() => DatepickerWidgetState();
 }
 
-class _DatepickerWidgetState extends State<DatepickerWidget> {
+class DatepickerWidgetState extends State<DatepickerWidget> {
   DateTime selectedDate = DateTime.now();
 
   Future<void> _selectDate(BuildContext context) async {

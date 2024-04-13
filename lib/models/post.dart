@@ -2,6 +2,7 @@ class PlantillaPost {
   final int templateId;
   final int userId;
   final String? username;
+  final String? bioUser;
   num? ratingAverage;
   num? numReviews;
   final String templateName;
@@ -12,6 +13,7 @@ class PlantillaPost {
   final List<Etiqueta> etiquetas;
 
   PlantillaPost({
+    this.bioUser,
     required this.templateId,
     required this.userId,
     this.username,
@@ -30,6 +32,7 @@ class PlantillaPost {
       templateId: json['template_id'] as int,
       userId: json['user_id'] as int,
       username: json['usuario']['username'] as String,
+      bioUser: json['usuario']['bio'] as String?,
       ratingAverage: json['rating_average'] as num,
       numReviews: json['num_reviews'] as num,
       templateName: json['template_name'] as String,

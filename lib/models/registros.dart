@@ -63,8 +63,8 @@ class RegistroSet {
   final int? registerSessionId;
   final int setId;
   int? reps;
-  double? weight;
-  double? time;
+  num? weight;
+  num? time;
   DateTime timestamp;
   String? video;
   // final RegistroDeSesion registroDeSesion;

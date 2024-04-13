@@ -9,7 +9,6 @@ import 'package:fit_match/widget/custom_button.dart';
 import 'package:fit_match/widget/exercise_card/exercise_card.dart';
 import 'package:fit_match/widget/exercise_card/reorder_exercise_card.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart';
 
 class InfoSesionEntrenamientoScreen extends StatefulWidget {
   final int templateId;
@@ -23,11 +22,10 @@ class InfoSesionEntrenamientoScreen extends StatefulWidget {
     required this.user,
   });
   @override
-  _InfoSesionEntrenamientoScreen createState() =>
-      _InfoSesionEntrenamientoScreen();
+  InfoSesionEntrenamientoState createState() => InfoSesionEntrenamientoState();
 }
 
-class _InfoSesionEntrenamientoScreen
+class InfoSesionEntrenamientoState
     extends State<InfoSesionEntrenamientoScreen> {
   SesionEntrenamiento editingSesion = SesionEntrenamiento(
     sessionId: 0,
@@ -36,7 +34,6 @@ class _InfoSesionEntrenamientoScreen
     order: 0,
     sessionDate: DateTime.now(),
   );
-
   List<EjerciciosDetalladosAgrupados> _exercises = [];
   List<TipoDeRegistro> _registerTypes = [];
 
@@ -60,17 +57,17 @@ class _InfoSesionEntrenamientoScreen
     _initData();
   }
 
-  void _setLoadingState(bool loading) {
-    setState(() => isLoading = loading);
-  }
+  // void _setLoadingState(bool loading) {
+  //   setState(() => isLoading = loading);
+  // }
 
-  void _initRegisterType() async {
-    List<TipoDeRegistro> groups =
-        await EjerciciosMethods().getTiposDeRegistro();
-    setState(() {
-      _registerTypes = groups;
-    });
-  }
+  // void _initRegisterType() async {
+  //   List<TipoDeRegistro> groups =
+  //       await EjerciciosMethods().getTiposDeRegistro();
+  //   setState(() {
+  //     _registerTypes = groups;
+  //   });
+  // }
 
   Future<void> _initData() async {
     setState(() => isLoading = true);
@@ -94,12 +91,11 @@ class _InfoSesionEntrenamientoScreen
 
   Future<void> _showReordenar() async {
     final List<EjerciciosDetalladosAgrupados>? result =
-        await Navigator.of(context).push<List<EjerciciosDetalladosAgrupados>>(
-      MaterialPageRoute(
-        builder: (context) =>
-            ReorderExercises(ejerciciosDetalladosAgrupados: _exercises),
-      ),
-    );
+        await Navigator.of(context)
+            .push<List<EjerciciosDetalladosAgrupados>>(MaterialPageRoute(
+      builder: (context) =>
+          ReorderExercises(ejerciciosDetalladosAgrupados: _exercises),
+    ));
 
     if (result != null && result.isNotEmpty) {
       setState(() {
@@ -161,7 +157,7 @@ class _InfoSesionEntrenamientoScreen
         builder: (context) => ExecriseSelectionScreen(
           user: widget.user,
           sessionId: widget.sessionId,
-          GroupedDetailedExerciseOrder: _exercises.length,
+          groupedDetailedExerciseOrder: _exercises.length,
         ),
       ),
     );
@@ -349,6 +345,7 @@ class _InfoSesionEntrenamientoScreen
           itemCount: _exercises.length,
           itemBuilder: (context, index) {
             return ExerciseCard(
+              key: ValueKey(_exercises[index].groupedDetailedExercisedId),
               ejercicioDetalladoAgrupado: _exercises[index],
               registerTypes: _registerTypes,
               index: index,

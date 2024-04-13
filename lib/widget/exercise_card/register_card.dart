@@ -1,12 +1,14 @@
 import 'dart:async';
+import 'package:expandable_text/expandable_text.dart';
 import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/registros.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
-import 'package:fit_match/widget/dialog.dart';
 import 'package:fit_match/widget/expandable_text.dart';
+import 'package:fit_match/widget/imagen_detailed.dart';
 import 'package:fit_match/widget/number_input_field.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class RegisterCard extends StatefulWidget {
   final EjerciciosDetalladosAgrupados ejercicioDetalladoAgrupado;
@@ -15,7 +17,7 @@ class RegisterCard extends StatefulWidget {
   final String system;
   final Function(SetsEjerciciosEntrada) onAddSet;
   final Function(SetsEjerciciosEntrada, RegistroSet) onDeleteSet;
-  final Function(SetsEjerciciosEntrada, int) onUpdateSet;
+  final Function(RegistroSet) onUpdateSet;
 
   const RegisterCard({
     Key? key,
@@ -29,10 +31,10 @@ class RegisterCard extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _RegisterCard createState() => _RegisterCard();
+  RegisterCardState createState() => RegisterCardState();
 }
 
-class _RegisterCard extends State<RegisterCard> {
+class RegisterCardState extends State<RegisterCard> {
   Timer? _debounce;
 
   @override
@@ -52,20 +54,11 @@ class _RegisterCard extends State<RegisterCard> {
     super.dispose();
   }
 
-  void _showDialog(String description, BuildContext context) async {
-    CustomDialog.show(
-      context,
-      Text(description),
-      () {},
-    );
-  }
-
   _getThisRegisterSessionSets(SetsEjerciciosEntrada setsEjerciciosEntrada) {
     List<RegistroSet> sets = setsEjerciciosEntrada.registroSet!
         .where(
             (element) => element.registerSessionId == widget.registerSessionId)
         .toList();
-
     return sets;
   }
 
@@ -73,34 +66,38 @@ class _RegisterCard extends State<RegisterCard> {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 16.0),
-      child: Column(
-        children: [
-          ...List.generate(
-              widget.ejercicioDetalladoAgrupado.ejerciciosDetallados.length,
-              (i) {
-            String? ordenDentroDeSet;
-            if (widget.ejercicioDetalladoAgrupado.ejerciciosDetallados.length >
-                1) {
-              ordenDentroDeSet = getExerciseLetter(i);
-            }
+      child: Padding(
+        padding: const EdgeInsets.all(4.0),
+        child: Column(
+          children: [
+            ...List.generate(
+                widget.ejercicioDetalladoAgrupado.ejerciciosDetallados.length,
+                (i) {
+              String? ordenDentroDeSet;
+              if (widget
+                      .ejercicioDetalladoAgrupado.ejerciciosDetallados.length >
+                  1) {
+                ordenDentroDeSet = getExerciseLetter(i);
+              }
 
-            return Column(
-              children: [
-                _buildListItem(
-                    context,
-                    widget.index,
-                    widget.ejercicioDetalladoAgrupado.ejerciciosDetallados[i],
-                    i,
-                    ordenDentroDeSet),
-                if (i <
-                    widget.ejercicioDetalladoAgrupado.ejerciciosDetallados
-                            .length -
-                        1)
-                  const Divider(),
-              ],
-            );
-          }),
-        ],
+              return Column(
+                children: [
+                  _buildListItem(
+                      context,
+                      widget.index,
+                      widget.ejercicioDetalladoAgrupado.ejerciciosDetallados[i],
+                      i,
+                      ordenDentroDeSet),
+                  if (i <
+                      widget.ejercicioDetalladoAgrupado.ejerciciosDetallados
+                              .length -
+                          1)
+                    const Divider(),
+                ],
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -113,155 +110,159 @@ class _RegisterCard extends State<RegisterCard> {
       String? ordenDentroDeSet) {
     double width = MediaQuery.of(context).size.width;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-      child: Column(
-        children: [
-          ListTile(
-            leading: RichText(
-              text: TextSpan(
-                children: [
+    return Column(
+      children: [
+        ListTile(
+          leading: RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '${groupIndex + 1} ',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (ordenDentroDeSet != null)
                   TextSpan(
-                    text: '${groupIndex + 1} ',
+                    text: '$ordenDentroDeSet ',
                     style: Theme.of(context)
                         .textTheme
                         .headlineSmall
                         ?.copyWith(fontWeight: FontWeight.bold),
+                  )
+              ],
+            ),
+          ),
+          title: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  ejercicioDetallado.ejercicio?.name ??
+                      'Ejercicio no especificado',
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.info_outline),
+                onPressed: () async {
+                  String? iconName =
+                      ejercicioDetallado.ejercicio?.muscleGroupId != null
+                          ? await getIconNameByMuscleGroupId(
+                              ejercicioDetallado.ejercicio!.muscleGroupId, [])
+                          : null;
+
+                  showDialogExerciseInfo(
+                      context,
+                      ejercicioDetallado.ejercicio!.name,
+                      ejercicioDetallado.ejercicio!.description,
+                      iconName,
+                      ejercicioDetallado.ejercicio!.video);
+                },
+                constraints: const BoxConstraints(),
+                alignment: Alignment.centerRight,
+              ),
+            ],
+          ),
+        ),
+        ...[
+          if (ejercicioDetallado.notes != null)
+            Container(
+              width: double.maxFinite,
+              padding: const EdgeInsets.all(10.0),
+              color: Theme.of(context).colorScheme.background,
+              child: Wrap(
+                children: [
+                  const Text("notas: "),
+                  ExpandableText(
+                    ejercicioDetallado.notes!,
+                    maxLines: 2,
+                    style: Theme.of(context).textTheme.bodySmall,
+                    expandText: 'mostrar más',
+                    collapseText: 'mostrar menos',
                   ),
-                  if (ordenDentroDeSet != null)
-                    TextSpan(
-                      text: '$ordenDentroDeSet ',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    )
                 ],
               ),
             ),
-            title: Row(
-              children: [
-                Flexible(
-                  child: Text(
-                    ejercicioDetallado.ejercicio?.name ??
-                        'Ejercicio no especificado',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.info_outline),
-                  onPressed: () {
-                    _showDialog(
-                        ejercicioDetallado.ejercicio!.description ??
-                            'Sin descripción',
-                        context);
-                  },
-                  constraints: const BoxConstraints(),
-                  alignment: Alignment.centerRight,
-                ),
-              ],
-            ),
-          ),
-          //se muestra el textArea si hay texto o si se le ha dado a "nota"
-          ...[
-            if (ejercicioDetallado.notes != null)
-              Container(
-                width: double.maxFinite,
-                padding: const EdgeInsets.all(10.0),
-                color: Theme.of(context).colorScheme.background,
-                child: Wrap(
-                  children: [
-                    const Text("notas: "),
-                    ExpandableText(
-                      text: ejercicioDetallado.notes!,
-                      maxLines: 2,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
+        ],
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'Set',
+                  style: width < webScreenSize
+                      ? Theme.of(context).textTheme.titleSmall
+                      : Theme.of(context).textTheme.titleMedium,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-          ],
-
-          Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Objetivo',
+                  style: width < webScreenSize
+                      ? Theme.of(context).textTheme.titleSmall
+                      : Theme.of(context).textTheme.titleMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'Anterior',
+                  style: width < webScreenSize
+                      ? Theme.of(context).textTheme.titleSmall
+                      : Theme.of(context).textTheme.titleMedium,
+                  overflow: TextOverflow.visible,
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Center(
                   child: Text(
-                    'Set',
+                    'Entrada',
                     style: width < webScreenSize
                         ? Theme.of(context).textTheme.titleSmall
                         : Theme.of(context).textTheme.titleMedium,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Objetivo',
-                    style: width < webScreenSize
-                        ? Theme.of(context).textTheme.titleSmall
-                        : Theme.of(context).textTheme.titleMedium,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Anterior',
-                    style: width < webScreenSize
-                        ? Theme.of(context).textTheme.titleSmall
-                        : Theme.of(context).textTheme.titleMedium,
-                    overflow: TextOverflow.visible,
-                  ),
-                ),
-                Expanded(
-                  flex: width < webScreenSize ? 5 : 3,
-                  child: Center(
-                    child: Text(
-                      'Entrada',
-                      style: width < webScreenSize
-                          ? Theme.of(context).textTheme.titleSmall
-                          : Theme.of(context).textTheme.titleMedium,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
-          ...ejercicioDetallado.setsEntrada!.expand((setEntrada) {
-            List<RegistroSet> registrosPorSet =
-                _getThisRegisterSessionSets(setEntrada);
-            int setIndex = ejercicioDetallado.setsEntrada!.indexOf(setEntrada);
-            return registrosPorSet.asMap().entries.map((entry) {
-              int registroIndex = entry.key;
-              RegistroSet registro = entry.value;
+        ),
+        ...ejercicioDetallado.setsEntrada!.expand((setEntrada) {
+          List<RegistroSet> registrosPorSet =
+              _getThisRegisterSessionSets(setEntrada);
+          int setIndex = ejercicioDetallado.setsEntrada!.indexOf(setEntrada);
+          return registrosPorSet.asMap().entries.map((entry) {
+            int registroIndex = entry.key;
+            RegistroSet registro = entry.value;
 
-              return SetRow(
-                set: setEntrada,
-                registerSessionId: widget.registerSessionId,
-                system: widget.system,
-                onDeleteSet: () => widget.onDeleteSet(setEntrada, registro),
-                selectedRegisterType: ejercicioDetallado.registerTypeId,
-                registroIndex: registroIndex,
-                onUpdateSet: (updatedSet) {
-                  widget.onUpdateSet(updatedSet, registroIndex);
-                },
-              );
-            }).toList();
-          }).toList(),
-
-          const SizedBox(height: 8),
-          OutlinedButton(
-            onPressed: () =>
-                {widget.onAddSet(ejercicioDetallado.setsEntrada!.last)},
-            child: const Text("+ añadir set"),
-          ),
-        ],
-      ),
+            return SetRow(
+              set: setEntrada,
+              registerSessionId: widget.registerSessionId,
+              system: widget.system,
+              onDeleteSet: () => widget.onDeleteSet(setEntrada, registro),
+              selectedRegisterType: ejercicioDetallado.registerTypeId,
+              actualRegistroSet: registro,
+              onUpdateSet: (registroSet) {
+                widget.onUpdateSet(registroSet);
+              },
+            );
+          }).toList();
+        }).toList(),
+        const SizedBox(height: 8),
+        OutlinedButton(
+          onPressed: () =>
+              {widget.onAddSet(ejercicioDetallado.setsEntrada!.last)},
+          child: const Text("+ añadir set"),
+        ),
+      ],
     );
   }
 }
@@ -270,10 +271,10 @@ class SetRow extends StatefulWidget {
   final SetsEjerciciosEntrada set;
   final int selectedRegisterType;
   final int registerSessionId;
-  final int registroIndex;
+  final RegistroSet actualRegistroSet;
   final String system;
 
-  final Function(SetsEjerciciosEntrada) onUpdateSet;
+  final Function(RegistroSet) onUpdateSet;
   final Function() onDeleteSet;
 
   const SetRow({
@@ -283,19 +284,20 @@ class SetRow extends StatefulWidget {
     required this.onUpdateSet,
     required this.onDeleteSet,
     required this.registerSessionId,
-    required this.registroIndex,
+    required this.actualRegistroSet,
     required this.system,
   }) : super(key: key);
 
   @override
-  _SetRowState createState() => _SetRowState();
+  SetRowState createState() => SetRowState();
 }
 
-class _SetRowState extends State<SetRow> {
+class SetRowState extends State<SetRow> {
   late TextEditingController repsController;
   late TextEditingController weightController;
   Timer? _debounce;
   String weightUnit = '';
+  // XFile? videoFile; // Para almacenar el video seleccionado
 
   @override
   void initState() {
@@ -303,16 +305,18 @@ class _SetRowState extends State<SetRow> {
     weightController = TextEditingController();
 
     weightUnit = widget.system == "metrico" ? 'kg' : 'lbs';
-
     super.initState();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    repsController.dispose();
+    weightController.dispose();
     super.dispose();
   }
 
+//Devuelve cuantos registro sets hay para un set de entrada
   _lengthRegistroSession() {
     return widget.set.registroSet!
         .where(
@@ -320,16 +324,36 @@ class _SetRowState extends State<SetRow> {
         .length;
   }
 
-  RegistroSet get actualSet {
-    return widget.set.registroSet!.elementAt(widget.registroIndex);
-  }
+  // void _pickVideo() async {
+  //   final ImagePicker picker = ImagePicker();
+  //   final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+  //   if (video != null) {
+  //     setState(() {
+  //       videoFile = video;
+  //     });
+  //   }
+  // }
 
+  // void _viewVideo() {
+  //   Navigator.of(context).push(MaterialPageRoute(
+  //     builder: (context) => VideoDetailScreen(
+  //       videoPath: videoFile!.path,
+  //       onDeleteVideo: () {
+  //         setState(() {
+  //           videoFile = null;
+  //         });
+  //       },
+  //     ),
+  //   ));
+  // }
+
+  //Devuelve true en caso de que exista un registro en el set en una sesión de registro anterior
   bool get isFirstRegisterInSet {
     if (_lengthRegistroSession() > 1) {
       var hasEarlierRegisters = widget.set.registroSet!.any((element) =>
           element.registerSessionId == widget.registerSessionId &&
-          element.registerSetId != actualSet.registerSetId &&
-          element.timestamp.isBefore(actualSet.timestamp));
+          element.registerSetId != widget.actualRegistroSet.registerSetId &&
+          element.timestamp.isBefore(widget.actualRegistroSet.timestamp));
 
       return !hasEarlierRegisters;
     } else {
@@ -337,28 +361,33 @@ class _SetRowState extends State<SetRow> {
     }
   }
 
+//Obtener el anterior registro set del set de entrada
   RegistroSet? get previousToLastSet {
-    // Verificar si la lista está vacía o si solo tiene un elemento
-    if (widget.set.registroSet!.isEmpty || widget.set.registroSet!.length < 2) {
-      return null;
-    } else {
-      // Filtrar los registros que no pertenecen a la sesión actual
-      var filteredSets = widget.set.registroSet!
-          .where((element) =>
-              element.registerSessionId != widget.registerSessionId)
-          .toList();
+    // Filtrar los registros que no pertenecen al registro de sesión actual
+    var filteredSets = widget.set.registroSet
+        ?.where(
+            (element) => element.registerSessionId != widget.registerSessionId)
+        .toList();
 
-      if (filteredSets.isEmpty) {
-        return null;
-      } else {
-        RegistroSet previousToLast = filteredSets.reduce((curr, next) =>
-            curr.timestamp.isBefore(next.timestamp) ? curr : next);
-        widget.system == "metrico"
-            ? previousToLast.weight = previousToLast.weight!
-            : previousToLast.weight = fromKgToLbs(previousToLast.weight!);
-        return previousToLast;
-      }
+    // Verificar si después de filtrar, la lista no está vacía
+    if (filteredSets == null || filteredSets.isEmpty) {
+      return null;
     }
+
+    // Ordenar los registros por fecha en orden ascendente
+    filteredSets.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    // Obtener el penúltimo elementom ( es decir, el primero de filteredSets )
+    RegistroSet previousToLast = filteredSets[0];
+
+    // Convertir el peso si es necesario
+    if (previousToLast.weight != null) {
+      previousToLast.weight = widget.system == "metrico"
+          ? previousToLast.weight
+          : fromKgToLbs(previousToLast.weight!);
+    }
+
+    return previousToLast;
   }
 
   Widget dash = const SizedBox(
@@ -387,46 +416,42 @@ class _SetRowState extends State<SetRow> {
 
       switch (field) {
         case 'reps':
-          actualSet.reps = intValue;
+          widget.actualRegistroSet.reps = intValue;
           break;
         case 'weight':
-          actualSet.weight = doubleValue;
+          widget.actualRegistroSet.weight = doubleValue;
           break;
         case 'time':
-          actualSet.time = doubleValue;
+          widget.actualRegistroSet.time = doubleValue;
           break;
       }
 
       //Solo se actualiza si lo valores no son nulos
       switch (widget.selectedRegisterType) {
         case 2: // Rango de repeticiones
-          if (actualSet.reps != null) {
-            widget.onUpdateSet(widget.set);
-          }
+          widget.onUpdateSet(widget.actualRegistroSet);
+
           break;
         case 4: // AMRAP
           //no hay que actualizar nada
           break;
         case 5: // Tiempo
-          if (actualSet.time != null) {
-            widget.onUpdateSet(widget.set);
-          }
+          widget.onUpdateSet(widget.actualRegistroSet);
+
           break;
         case 6: //Rango de tiempo
-          if (actualSet.time != null && actualSet.weight != null) {
-            widget.onUpdateSet(widget.set);
-          }
+          widget.onUpdateSet(widget.actualRegistroSet);
+
           break;
         default:
-          if (actualSet.reps != null && actualSet.weight != null) {
-            widget.onUpdateSet(widget.set);
-          }
+          widget.onUpdateSet(widget.actualRegistroSet);
+
           break;
       }
     });
   }
 
-  String transformWeightIntoLbs(double? weight) {
+  String transformWeightIntoLbs(num? weight) {
     if (weight == null) {
       return '';
     }
@@ -444,8 +469,9 @@ class _SetRowState extends State<SetRow> {
     switch (widget.selectedRegisterType) {
       case 2: // Objetivo de repeticiones
 
-        repsController.text = actualSet.reps?.toString() ?? '';
-        weightController.text = transformWeightIntoLbs(actualSet.weight);
+        repsController.text = widget.actualRegistroSet.reps?.toString() ?? '';
+        weightController.text =
+            transformWeightIntoLbs(widget.actualRegistroSet.weight);
         return [
           Expanded(
             child: DoubleInputField(
@@ -461,7 +487,7 @@ class _SetRowState extends State<SetRow> {
           const Expanded(child: Text('AMRAP', style: TextStyle(fontSize: 16))),
         ];
       case 5: // Tiempo
-        weightController.text = actualSet.time?.toString() ?? '';
+        weightController.text = widget.actualRegistroSet.time?.toString() ?? '';
         return [
           Expanded(
             child: DoubleInputField(
@@ -474,8 +500,9 @@ class _SetRowState extends State<SetRow> {
           minText,
         ];
       case 6: // Rango de tiempo
-        repsController.text = actualSet.time?.toString() ?? '';
-        weightController.text = transformWeightIntoLbs(actualSet.weight);
+        repsController.text = widget.actualRegistroSet.time?.toString() ?? '';
+        weightController.text =
+            transformWeightIntoLbs(widget.actualRegistroSet.weight);
         return [
           Expanded(
             child: DoubleInputField(
@@ -497,8 +524,9 @@ class _SetRowState extends State<SetRow> {
           ),
         ];
       default: // Por defecto, solo repeticiones y peso
-        repsController.text = actualSet.reps?.toString() ?? '';
-        weightController.text = transformWeightIntoLbs(actualSet.weight);
+        repsController.text = widget.actualRegistroSet.reps?.toString() ?? '';
+        weightController.text =
+            transformWeightIntoLbs(widget.actualRegistroSet.weight);
         return [
           Expanded(
             child: DoubleInputField(
@@ -520,68 +548,67 @@ class _SetRowState extends State<SetRow> {
     }
   }
 
-  List<Widget> _buildExpectedInputFields() {
+  List<Widget> _buildExpectedInputFields(double width) {
     switch (widget.selectedRegisterType) {
       case 1: // Rango de repeticiones
 
         return [
-          Expanded(
-            child: Text(
-              "${widget.set.minReps?.toString() ?? '_'} reps-${widget.set.maxReps?.toString() ?? '_'} reps",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${widget.set.minReps?.toString() ?? ''} - ${widget.set.maxReps?.toString() ?? ''} ${(widget.set.minReps == null && widget.set.maxReps == null) ? '' : 'reps'}",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       case 4: // AMRAP
         return [
-          const Expanded(
-            child: Text('AMRAP',
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 16)),
+          Text(
+            'AMRAP',
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
+            ),
           ),
         ];
       case 5: // Tiempo
 
         return [
-          Expanded(
-            child: Text(
-              "${widget.set.time?.toString() ?? '_'} min",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${widget.set.time?.toString() ?? ''} min",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
-          minText,
         ];
       case 6: // Rango de tiempo
 
         return [
-          Expanded(
-            child: Text(
-              "${widget.set.maxTime?.toString() ?? '_'} min-${widget.set.maxTime?.toString() ?? '_'} min",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${widget.set.maxTime?.toString() ?? ''} - ${widget.set.maxTime?.toString() ?? '_'} min",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       default: // Por defecto, solo repeticiones
 
         return [
-          Expanded(
-            child: Text(
-              "${widget.set.reps?.toString() ?? '_'} reps",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${widget.set.reps?.toString() ?? ''} reps",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
     }
   }
 
-  List<Widget> _buildLastSessionInputFields() {
+  List<Widget> _buildLastSessionInputFields(double width) {
     if (previousToLastSet == null) {
       return [
-        const Expanded(
-          child: Text('N/A',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: Colors.grey)),
-        ),
+        Text('N/A',
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+                color: Colors.grey, fontSize: width > webScreenSize ? 16 : 12)),
       ];
     }
 
@@ -589,47 +616,46 @@ class _SetRowState extends State<SetRow> {
     switch (widget.selectedRegisterType) {
       case 2:
         return [
-          Expanded(
-            child: Text(
-              "${previousToLastSet!.reps.toString()} reps ",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${previousToLastSet!.reps.toString()} reps ",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       case 4: // AMRAP
         return [
-          const Expanded(
-            child: Text(
-              'AMRAP',
-              style: TextStyle(fontSize: 16),
-              overflow: TextOverflow.ellipsis,
+          Text(
+            'AMRAP',
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       case 5: // Tiempo
         return [
-          Expanded(
-            child: Text(
-              "${previousToLastSet!.time.toString()} min",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${previousToLastSet!.time.toString()} min",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       case 6: // Rango de tiempo
         return [
-          Expanded(
-            child: Text(
-              "${previousToLastSet!.time.toString()} min x ${previousToLastSet!.weight.toString()} $weightUnit",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${previousToLastSet!.time.toString()} min x ${previousToLastSet!.weight.toString()} $weightUnit",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
       default: // Por defecto, solo repeticiones
         return [
-          Expanded(
-            child: Text(
-              "${previousToLastSet!.reps.toString()} reps x ${previousToLastSet!.weight.toString()} $weightUnit",
-              overflow: TextOverflow.ellipsis,
+          Text(
+            "${previousToLastSet!.reps.toString()} reps x ${previousToLastSet!.weight.toString()} $weightUnit",
+            style: TextStyle(
+              fontSize: width > webScreenSize ? 16 : 12,
             ),
           ),
         ];
@@ -640,44 +666,53 @@ class _SetRowState extends State<SetRow> {
     double width = MediaQuery.of(context).size.width;
 
     List<Widget> inputFields = _buildInputFields();
-    List<Widget> expectedInputFields = _buildExpectedInputFields();
-    List<Widget> lastSessionInputFields = _buildLastSessionInputFields();
+    List<Widget> expectedInputFields = _buildExpectedInputFields(width);
+    List<Widget> lastSessionInputFields = _buildLastSessionInputFields(width);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
+            flex: 1,
             child: Text('${widget.set.setOrder}',
                 style: const TextStyle(fontSize: 16))),
-        Expanded(
+        Flexible(
           flex: 2,
-          child: Row(children: expectedInputFields),
-        ),
-        Expanded(
-          flex: 2,
-          child: Center(child: Row(children: lastSessionInputFields)),
-        ),
-        Expanded(
-          flex: width < webScreenSize ? 4 : 2,
-          child: Row(children: inputFields),
-        ),
-        Expanded(
           child: Wrap(
-            children: [
-              IconButton(
-                onPressed: null,
-                icon:
-                    Icon(Icons.videocam, color: Theme.of(context).primaryColor),
-              ),
-              if (_lengthRegistroSession() > 1 && !isFirstRegisterInSet)
+            alignment: WrapAlignment.spaceBetween,
+            children: expectedInputFields,
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Center(
+              child: Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  children: lastSessionInputFields)),
+        ),
+        Expanded(
+          flex: 4,
+          child: Center(child: Row(children: inputFields)),
+        ),
+        if (_lengthRegistroSession() > 1 && !isFirstRegisterInSet)
+          Expanded(
+            child: Wrap(
+              children: [
+                // IconButton(
+                //   onPressed: videoFile == null ? _pickVideo : _viewVideo,
+                //   icon: Icon(
+                //       videoFile == null ? Icons.videocam : Icons.play_circle_fill,
+                //       color: Theme.of(context).colorScheme.onPrimaryContainer),
+                // ),
+
                 IconButton(
                   onPressed: () => widget.onDeleteSet(),
                   icon: const Icon(Icons.delete),
                   color: Colors.red,
                 ),
-            ],
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
@@ -686,12 +721,12 @@ class _SetRowState extends State<SetRow> {
   Widget build(BuildContext context) {
     if (!(_lengthRegistroSession() > 1 && !isFirstRegisterInSet)) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8),
         child: _buildSetRowItem(),
       );
     } else {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 16.0),
+        padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8),
         child: Dismissible(
           key: ValueKey('set_$widget.set.setId}_${DateTime.now()}'),
           onDismissed: (_) => widget.onDeleteSet(),

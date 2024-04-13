@@ -30,17 +30,23 @@ class LineChartState extends State<LineChartMedidaSample> {
   late double originalMaxX;
   late double originalMinY;
   late double originalMaxY;
+  double marginFactor = 0.10; // El margen es el 5% del rango total
 
   late List<FlSpot> spots;
   late String system;
 
   List<FlSpot> getSpotsFromStatsMedida(List<StatMedida> medidas) {
-    return medidas.asMap().entries.map((entry) {
-      double value = entry.value.value;
-      double date = entry.value.date.millisecondsSinceEpoch.toDouble();
+    return medidas
+        .asMap()
+        .entries
+        .map((entry) {
+          double value = entry.value.value;
+          double date = entry.value.date.millisecondsSinceEpoch.toDouble();
 
-      return FlSpot(date, value);
-    }).toList();
+          return FlSpot(date, value);
+        })
+        .where((spot) => spot.y > 0)
+        .toList();
   }
 
   @override
@@ -149,14 +155,23 @@ class LineChartState extends State<LineChartMedidaSample> {
       fontSize: 16,
     );
 
-    // Desnormaliza el valor para convertirlo de vuelta a un timestamp
-    double desnormalizedValue =
-        desnormalizeValue(value, originalMinX, originalMaxX, 0, 10);
+    // Calcula los valores extremos desnormalizados
+    double minXDesnormalized =
+        desnormalizeValue(0, originalMinX, originalMaxX, 0, 10);
+    double maxXDesnormalized =
+        desnormalizeValue(10, originalMinX, originalMaxX, 0, 10);
 
-    // Convierte el valor desnormalizado de timestamp a fecha
-
-    var date = DateTime.fromMillisecondsSinceEpoch(desnormalizedValue.toInt());
+    // Convierte el valor de vuelta a un timestamp para la fecha
+    var date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
     var formattedDate = DateFormat("MMM d").format(date);
+
+    // Evita mostrar la etiqueta si el valor es muy cercano a los extremos desnormalizados
+    if (value <=
+            minXDesnormalized + marginFactor * (originalMaxX - originalMinX) ||
+        value >=
+            maxXDesnormalized - marginFactor * (originalMaxX - originalMinX)) {
+      return const SizedBox.shrink();
+    }
 
     return SideTitleWidget(
       axisSide: meta.axisSide,
@@ -178,54 +193,34 @@ class LineChartState extends State<LineChartMedidaSample> {
     return Text('${value.toInt()} ${widget.unit}', style: style);
   }
 
-  double calculateBottomInterval() {
-    // Verifica si originalMinX o originalMaxX no son números válidos o si son iguales.
-    if (originalMinX.isNaN ||
-        originalMaxX.isNaN ||
-        originalMaxX == originalMinX) {
-      // Retorna un valor predeterminado seguro para evitar división por cero o operaciones con NaN.
-      return 86400000; // Equivalente a 1 día en milisegundos como valor predeterminado.
-    }
+  double calculateLabelInterval({
+    required double chartWidth,
+    required int totalLabels,
+    required double minX,
+    required double maxX,
+  }) {
+    // Estimar el espacio mínimo en píxeles que debería haber entre etiquetas para evitar el choque
+    const double minSpacePerLabel = 60.0;
+    // Calcular el número total de intervalos (espacios entre etiquetas) que caben en el ancho del gráfico
+    double maxLabelsAllowed = chartWidth / minSpacePerLabel;
 
-    final double totalRange = originalMaxX - originalMinX;
-    const double minVisibleInterval = 86400000; // 1 día en milisegundos.
+    // Calcular el rango total de valores en el eje X después de la normalización
+    double normalizedRange = maxX - minX;
 
-    // Calcula el ancho disponible para el gráfico, ajustando por el padding/margen.
-    double width = MediaQuery.of(context).size.width - 40;
-    const double labelWidth =
-        60; // Estimación del ancho necesario por etiqueta.
+    // Calcular el intervalo necesario para ajustarse al número máximo de etiquetas permitidas
+    // Dividiendo el rango normalizado entre el número de intervalos (maxLabelsAllowed)
+    // Esta parte calcula cuánto "espacio" en términos de valor normalizado debe haber entre cada etiqueta
+    double normalizedInterval = normalizedRange / maxLabelsAllowed;
 
-    // Calcula el número de etiquetas que pueden ajustarse sin solaparse.
-    int numLabels = (width / labelWidth).floor();
+    // Calcular cuántos intervalos de datos cabrían entre etiquetas basado en el intervalo normalizado calculado
+    // Redondear hacia arriba para asegurar que no se sobrepongan las etiquetas
+    double dataInterval = (totalLabels / normalizedInterval).ceil().toDouble();
 
-    // Si numLabels es 0, ajusta a 1 para evitar la división por cero más adelante.
-    numLabels = max(numLabels, 1);
-
-    // Calcula el intervalo de tiempo entre etiquetas para evitar el solapamiento.
-    double interval = totalRange / numLabels;
-
-    // Asegura que el intervalo no sea menor que el mínimo visible establecido.
-    interval = max(interval, minVisibleInterval);
-
-    // La función normalizeTimestamp() ajusta el intervalo calculado a la escala utilizada en el eje X.
-    // Es necesario asegurarse de que esta función maneje correctamente los valores y no genere NaN.
-    double normalizedInterval =
-        normalizeTimestamp(interval, originalMinX, originalMaxX, 0, 10);
-    double normalizedZero =
-        normalizeTimestamp(0, originalMinX, originalMaxX, 0, 10);
-
-    // Verifica si el resultado de la normalización es NaN.
-    if (normalizedInterval.isNaN || normalizedZero.isNaN) {
-      // Retorna un valor predeterminado si la normalización falla.
-      return 86400000; // Equivalente a 1 día en milisegundos como valor predeterminado.
-    }
-
-    return normalizedInterval - normalizedZero;
+    // Asegurarse de que el intervalo es al menos 1 para evitar la división por cero o intervalos negativos
+    return max(1, dataInterval);
   }
 
   LineChartData mainData(double aspectRatio, int totalLabels) {
-    const double marginFactor = 0.00; // El margen es el 5% del rango total
-
     double minX =
         spots.isNotEmpty ? spots.map((spot) => spot.x).reduce(min) : 0.0;
     double maxX =
@@ -241,8 +236,8 @@ class LineChartState extends State<LineChartMedidaSample> {
     double rangeY = maxY - minY; // El rango total en el eje Y
     minY -= rangeY * marginFactor; // Resta el margen al mínimo
     maxY += rangeY * marginFactor; // Añade el margen al máximo
-    double visibleRange =
-        originalMaxX - originalMinX; // Actualiza esto según el zoom
+    // double visibleRange =
+    //     originalMaxX - originalMinX; // Actualiza esto según el zoom
 
     return LineChartData(
       lineTouchData: LineTouchData(
@@ -253,7 +248,7 @@ class LineChartState extends State<LineChartMedidaSample> {
               final dataIndex = spots.indexWhere(
                   (spot) => spot.x == barSpot.x && spot.y == barSpot.y);
               if (dataIndex != -1) {
-                String text = spots[dataIndex].y.toString() + " ${widget.unit}";
+                String text = "${spots[dataIndex].y} ${widget.unit}";
                 return LineTooltipItem(
                   text,
                   TextStyle(
@@ -267,10 +262,15 @@ class LineChartState extends State<LineChartMedidaSample> {
         handleBuiltInTouches: true,
       ),
       gridData: FlGridData(
+        verticalInterval: calculateLabelInterval(
+          chartWidth: MediaQuery.of(context).size.width,
+          totalLabels: spots.length,
+          minX: minX,
+          maxX: maxX,
+        ),
+        horizontalInterval: 5,
         show: true,
         drawVerticalLine: true,
-        horizontalInterval: 1,
-        verticalInterval: 1,
         getDrawingHorizontalLine: (value) {
           return const FlLine(
             color: Colors.white10,
@@ -296,14 +296,19 @@ class LineChartState extends State<LineChartMedidaSample> {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
-            interval: calculateBottomInterval(),
+            interval: calculateLabelInterval(
+              chartWidth: MediaQuery.of(context).size.width,
+              totalLabels: spots.length,
+              minX: minX,
+              maxX: maxX,
+            ),
             getTitlesWidget: bottomTitleWidgets,
           ),
         ),
         leftTitles: AxisTitles(
           sideTitles: SideTitles(
             showTitles: true,
-            interval: 1,
+            interval: 10,
             getTitlesWidget: leftTitleWidgets,
             reservedSize: 42,
           ),
@@ -326,8 +331,18 @@ class LineChartState extends State<LineChartMedidaSample> {
           ),
           barWidth: 5,
           isStrokeCapRound: true,
-          dotData: const FlDotData(
-            show: false,
+          dotData: FlDotData(
+            show: true, // Habilitar la visualización de los puntos
+            getDotPainter: (spot, percent, barData, index) {
+              // Personaliza cómo se dibuja cada punto aquí
+              return FlDotCirclePainter(
+                radius:
+                    4, // El radio del punto, ajusta esto para hacer puntos más grandes
+                color: Colors.white, // Color del centro del punto
+                strokeWidth: 2, // El grosor del borde del punto
+                strokeColor: Colors.black, // Color del borde del punto
+              );
+            },
           ),
           belowBarData: BarAreaData(
             show: true,

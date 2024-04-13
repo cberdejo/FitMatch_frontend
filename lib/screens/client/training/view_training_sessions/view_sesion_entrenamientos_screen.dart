@@ -67,7 +67,8 @@ class _ViewSesionEntrenamientoScreen
     await SesionEntrenamientoMethods().deleteSesionEntrenamiento(id);
   }
 
-  void _navigateNewSesion(SesionEntrenamiento sesionEntrenamiento) async {
+  void _navigateNewSesion(SesionEntrenamiento sesionEntrenamiento,
+      {bool isEdit = false}) async {
     Navigator.of(context)
         .push(MaterialPageRoute(
       builder: (context) => InfoSesionEntrenamientoScreen(
@@ -78,7 +79,8 @@ class _ViewSesionEntrenamientoScreen
     ))
         .then((deleteInfo) {
       initSesionEntrenamientos(); //cargo las sesiones y se actualizan
-      if (deleteInfo != null) {
+      if (deleteInfo != null && !isEdit) {
+        //debo borrar la sesión si es nueva y se ha quedado vacía
         _deleteSesionById(deleteInfo);
       }
     });
@@ -145,8 +147,6 @@ class _ViewSesionEntrenamientoScreen
   }
 
   Widget _buildEntrenamientosList(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-
     if (sesiones.isEmpty) {
       return const Text(
         'No hay sesiones de entrenamiento todavía',
@@ -225,7 +225,7 @@ class _ViewSesionEntrenamientoScreen
   void _handleMenuItemSelected(String value, SesionEntrenamiento sesion) {
     switch (value) {
       case 'Editar':
-        _navigateNewSesion(sesion);
+        _navigateNewSesion(sesion, isEdit: true);
         break;
       case 'Eliminar':
         _deleteSesion(sesion);

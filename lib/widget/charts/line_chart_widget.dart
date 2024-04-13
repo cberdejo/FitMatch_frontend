@@ -34,34 +34,41 @@ class _LineChartSample extends State<LineChartSample> {
 
   late List<FlSpot> spots;
   late String system;
+  double marginFactor = 0.10; // El margen es el 5% del rango total
 
   List<FlSpot> getSpotsFromRegistros(
       List<RegistroSet> registros, int registerTypeId) {
-    return registros.asMap().entries.map((entry) {
-      // int index = entry.key;
-      double value = 0.0; // Inicialización predeterminada
+    return registros
+        .asMap()
+        .entries
+        .map((entry) {
+          // int index = entry.key;
+          double value = 0.0; // Inicialización predeterminada
 
-      double date = entry.value.timestamp.millisecondsSinceEpoch.toDouble();
+          double date = entry.value.timestamp.millisecondsSinceEpoch.toDouble();
 
-      switch (registerTypeId) {
-        case 4: // AMRAP: usar 'reps'
-          value = 1;
-          break;
-        case 5: // Tiempo
-          value = entry.value.time ?? 0.0;
-          break;
-        case 6: // rango Tiempo
-          value = (entry.value.time?.toDouble() ?? 0.0) *
-              (entry.value.weight?.toDouble() ?? 0.0);
+          switch (registerTypeId) {
+            case 4: // AMRAP: usar 'reps'
+              value = 1;
+              break;
+            case 5: // Tiempo
+              value =
+                  entry.value.time != null ? entry.value.time!.toDouble() : 0.0;
+              break;
+            case 6: // rango Tiempo
+              value = (entry.value.time?.toDouble() ?? 0.0) *
+                  (entry.value.weight?.toDouble() ?? 0.0);
 
-          break;
-        default: // Otro tipo: usar 'weight' si eso tiene sentido
-          value = (entry.value.weight?.toDouble() ?? 0.0) *
-              (entry.value.reps?.toDouble() ?? 0.0);
-          break;
-      }
-      return FlSpot(date, value);
-    }).toList();
+              break;
+            default: // Otro tipo: usar 'weight' si eso tiene sentido
+              value = (entry.value.weight?.toDouble() ?? 0.0) *
+                  (entry.value.reps?.toDouble() ?? 0.0);
+              break;
+          }
+          return FlSpot(date, value);
+        })
+        .where((spot) => spot.y > 0)
+        .toList();
   }
 
   @override
@@ -78,12 +85,12 @@ class _LineChartSample extends State<LineChartSample> {
   _initSpots() {
     List<FlSpot> spotsSinNormalizar =
         getSpotsFromRegistros(widget.registroSet, widget.registerTypeId);
-//deberían estar ordenados pero por si acaso
+    //deberían estar ordenados pero por si acaso
     spotsSinNormalizar.sort((a, b) => a.x.compareTo(b.x));
 
-// Un pequeño valor para incrementar los puntos con el mismo valor de x.
+    // Un pequeño valor para incrementar los puntos con el mismo valor de x.
     double increment = 0.001;
-//Para que no tengan los mismos valores de x
+    //Para que no tengan los mismos valores de x
     for (int i = 1; i < spotsSinNormalizar.length; i++) {
       if (spotsSinNormalizar[i].x == spotsSinNormalizar[i - 1].x) {
         // Encuentra el próximo valor único de x incrementando ligeramente.
@@ -97,7 +104,7 @@ class _LineChartSample extends State<LineChartSample> {
       }
     }
 
-// Ahora puedes proceder con la normalización y otros pasos como antes.
+    // Ahora puedes proceder con la normalización y otros pasos como antes.
 
     originalMinX = spotsSinNormalizar.isNotEmpty
         ? spotsSinNormalizar.map((spot) => spot.x).reduce(min)
@@ -112,6 +119,19 @@ class _LineChartSample extends State<LineChartSample> {
     originalMaxY = spotsSinNormalizar.isNotEmpty
         ? spotsSinNormalizar.map((spot) => spot.y).reduce(max)
         : 0.0;
+
+    // Incrementa ligeramente el rango de los valores min y max para el eje X
+    const double paddingX = 0.05; // 5% de padding
+    double rangeX = originalMaxX - originalMinX;
+    double paddingAmountX = rangeX * paddingX;
+    originalMinX -= paddingAmountX;
+    originalMaxX += paddingAmountX;
+
+    double rangeY = originalMaxY - originalMinY;
+    double paddingAmountY =
+        rangeY * paddingX; // Asumiendo el mismo porcentaje de padding
+    originalMinY -= paddingAmountY;
+    originalMaxY += paddingAmountY;
 
     spots = spotsSinNormalizar.map((spot) {
       double x = normalizeTimestamp(spot.x, originalMinX, originalMaxX, 0, 10);
@@ -205,45 +225,29 @@ class _LineChartSample extends State<LineChartSample> {
   }
 
   Widget bottomTitleWidgets(double value, TitleMeta meta) {
-    const dayInMilliseconds = 86400000;
     final style = TextStyle(
       color: Theme.of(context).colorScheme.onBackground,
       fontWeight: FontWeight.bold,
       fontSize: 16,
     );
 
-    // Asegúrate de que los valores de originalMinX y originalMaxX sean válidos
-    if (originalMinX.isNaN ||
-        originalMaxX.isNaN ||
-        originalMaxX <= originalMinX) {
-      // Considera retornar un widget vacío o con valores predeterminados si los rangos no son válidos
-      return const SizedBox.shrink();
-    }
+    // Calcula los valores extremos desnormalizados
+    double minXDesnormalized =
+        desnormalizeValue(0, originalMinX, originalMaxX, 0, 10);
+    double maxXDesnormalized =
+        desnormalizeValue(10, originalMinX, originalMaxX, 0, 10);
 
-    // Desnormaliza el valor para convertirlo de vuelta a un timestamp
-    double desnormalizedValue =
-        desnormalizeValue(value, originalMinX, originalMaxX, 0, 10);
+    // Convierte el valor de vuelta a un timestamp para la fecha
+    var date = DateTime.fromMillisecondsSinceEpoch(value.toInt());
+    var formattedDate = DateFormat("MMM d").format(date);
 
-    // Asegúrate de que desnormalizedValue sea un valor válido
-    if (desnormalizedValue.isNaN) {
-      // Manejo del caso en que desnormalizedValue es NaN
-      return const SizedBox.shrink();
-    }
-
-    // Ajusta el formato de fecha basado en el rango visible
-    String dateFormat;
-    double visibleRange = originalMaxX - originalMinX;
-    if (visibleRange > 777600000) {
-      // Más de 9 días
-      dateFormat = "MMM yy";
-    } else {
-      // 2 días o menos
-      dateFormat = "MMM d";
-    }
-
-    // Convierte el valor desnormalizado de timestamp a fecha
-    var date = DateTime.fromMillisecondsSinceEpoch(desnormalizedValue.toInt());
-    var formattedDate = DateFormat(dateFormat).format(date);
+    // // Evita mostrar la etiqueta si el valor es muy cercano a los extremos desnormalizados
+    // if (value <=
+    //         minXDesnormalized + marginFactor * (originalMaxX - originalMinX) ||
+    //     value >=
+    //         maxXDesnormalized - marginFactor * (originalMaxX - originalMinX)) {
+    //   return const SizedBox.shrink();
+    // }
 
     return SideTitleWidget(
       axisSide: meta.axisSide,
@@ -251,112 +255,14 @@ class _LineChartSample extends State<LineChartSample> {
     );
   }
 
-  // double calculateBottomInterval() {
-  //   final double totalRange = originalMaxX - originalMinX;
-
-  //   const double minVisibleInterval = 86400000; // 1 día en milisegundos.
-
-  //   // Calcula el número de intervalos visibles basado en el ancho del gráfico y un ancho estimado por etiqueta.
-  //   // Ajusta el 'labelWidth' según el tamaño medio de tus etiquetas para evitar el solapamiento.
-  //   double width = MediaQuery.of(context).size.width -
-  //       40; // Ajusta según el padding/margen de tu gráfico.
-  //   const double labelWidth = 60; // Estimación del ancho por etiqueta.
-  //   int numLabels = (width / labelWidth).floor();
-
-  //   // Asegúrate de no dividir por cero.
-  //   if (numLabels == 0) {
-  //     return totalRange; // Solo muestra una etiqueta si no hay suficiente espacio.
-  //   }
-
-  //   // Calcula el intervalo de tiempo (en milisegundos) entre etiquetas para evitar el solapamiento.
-  //   double interval = totalRange / numLabels;
-
-  //   // Asegura que el intervalo no sea menor que el mínimo establecido.
-  //   interval = max(interval, minVisibleInterval);
-
-  //   // Convierte el intervalo de milisegundos a la unidad que estés usando en el eje X.
-  //   // Si estás normalizando las fechas a otro rango (por ejemplo, 0 a 10), necesitarás convertir este intervalo.
-  //   // De lo contrario, si estás usando milisegundos directamente, puedes devolver este valor.
-  //   return normalizeTimestamp(interval, originalMinX, originalMaxX, 0, 10) -
-  //       normalizeTimestamp(0, originalMinX, originalMaxX, 0, 10);
-  // }
-
-  double calculateBottomInterval() {
-    // Verifica si originalMinX o originalMaxX no son números válidos o si son iguales.
-    if (originalMinX.isNaN ||
-        originalMaxX.isNaN ||
-        originalMaxX == originalMinX) {
-      // Retorna un valor predeterminado seguro para evitar división por cero o operaciones con NaN.
-      return 86400000; // Equivalente a 1 día en milisegundos como valor predeterminado.
-    }
-
-    final double totalRange = originalMaxX - originalMinX;
-    const double minVisibleInterval = 86400000; // 1 día en milisegundos.
-
-    // Calcula el ancho disponible para el gráfico, ajustando por el padding/margen.
-    double width = MediaQuery.of(context).size.width - 40;
-    const double labelWidth =
-        60; // Estimación del ancho necesario por etiqueta.
-
-    // Calcula el número de etiquetas que pueden ajustarse sin solaparse.
-    int numLabels = (width / labelWidth).floor();
-
-    // Si numLabels es 0, ajusta a 1 para evitar la división por cero más adelante.
-    numLabels = max(numLabels, 1);
-
-    // Calcula el intervalo de tiempo entre etiquetas para evitar el solapamiento.
-    double interval = totalRange / numLabels;
-
-    // Asegura que el intervalo no sea menor que el mínimo visible establecido.
-    interval = max(interval, minVisibleInterval);
-
-    // La función normalizeTimestamp() ajusta el intervalo calculado a la escala utilizada en el eje X.
-    // Es necesario asegurarse de que esta función maneje correctamente los valores y no genere NaN.
-    double normalizedInterval =
-        normalizeTimestamp(interval, originalMinX, originalMaxX, 0, 10);
-    double normalizedZero =
-        normalizeTimestamp(0, originalMinX, originalMaxX, 0, 10);
-
-    // Verifica si el resultado de la normalización es NaN.
-    if (normalizedInterval.isNaN || normalizedZero.isNaN) {
-      // Retorna un valor predeterminado si la normalización falla.
-      return 86400000; // Equivalente a 1 día en milisegundos como valor predeterminado.
-    }
-
-    return normalizedInterval - normalizedZero;
-  }
-
   Widget leftTitleWidgets(
     double value,
     TitleMeta meta,
   ) {
     return const SizedBox.shrink();
-    // const style = TextStyle(
-    //   color: Color(0xff67727d),
-    //   fontWeight: FontWeight.bold,
-    //   fontSize: 15,
-    // );
-
-    // double interval;
-    // if (originalMaxY != originalMinY) {
-    //   interval = (originalMaxY - originalMinY) / 5;
-    // } else {
-    //   interval = 1;
-    // }
-    // double roundedValue = (value / interval).round() * interval;
-    // if (value % interval == 0 ||
-    //     value == originalMinY ||
-    //     value == originalMaxY) {
-    //   return Text(roundedValue.toInt().toString(), style: style);
-    // } else {
-    //   // Retorna un widget vacío para los valores que no coincidan
-    //   return const SizedBox.shrink();
-    // }
   }
 
   LineChartData mainData(double aspectRatio, int totalLabels) {
-    const double marginFactor = 0.00; // El margen es el 5% del rango total
-
     double minX =
         spots.isNotEmpty ? spots.map((spot) => spot.x).reduce(min) : 0.0;
     double maxX =
@@ -372,8 +278,8 @@ class _LineChartSample extends State<LineChartSample> {
     double rangeY = maxY - minY; // El rango total en el eje Y
     minY -= rangeY * marginFactor; // Resta el margen al mínimo
     maxY += rangeY * marginFactor; // Añade el margen al máximo
-    double visibleRange =
-        originalMaxX - originalMinX; // Actualiza esto según el zoom
+    // double visibleRange =
+    //     originalMaxX - originalMinX; // Actualiza esto según el zoom
 
     return LineChartData(
       lineTouchData: LineTouchData(
@@ -385,28 +291,34 @@ class _LineChartSample extends State<LineChartSample> {
                   (spot) => spot.x == barSpot.x && spot.y == barSpot.y);
               if (dataIndex != -1) {
                 final data = widget.registroSet[dataIndex];
-                String text =
-                    "${data.reps} repes x  ${widget.system == 'metrico' ? data.weight : fromKgToLbs(data.weight ?? 0.0)} $system";
+                // Asumiendo que 'fromKgToLbs' maneja correctamente valores nulos o esto se ajusta antes de la llamada
+                final weightText = widget.system == 'metrico'
+                    ? (data.weight ?? 0.0)
+                    : fromKgToLbs(data.weight ?? 0.0);
+                final system = widget.system == 'metrico'
+                    ? 'kg'
+                    : 'lbs'; // Asegúrate de que esta variable 'system' esté definida correctamente en tu código
+                String text = "${data.reps ?? 0} repes x $weightText $system";
+
                 switch (widget.registerTypeId) {
                   case 4: // AMRAP: usar 'reps'
-                    text = "Armrap";
+                    text = "AMRAP: ${data.reps ?? 0} repes";
                     break;
                   case 5: // Tiempo
-                    text = "${data.time} minutos";
+                    text = "${data.time ?? 0} minutos";
                     break;
-                  case 6: // rango Tiempoç
-
-                    text =
-                        "${data.time} minutos x ${widget.system == 'metrico' ? data.weight : fromKgToLbs(data.weight ?? 0.0)} $system";
-
+                  case 6: // Rango de Tiempo
+                    text = "${data.time ?? 0} minutos x $weightText $system";
                     break;
                 }
+
                 return LineTooltipItem(
                   text,
                   TextStyle(
                       color: Theme.of(context).colorScheme.onPrimaryContainer),
                 );
               }
+
               return null;
             }).toList();
           },
@@ -416,8 +328,6 @@ class _LineChartSample extends State<LineChartSample> {
       gridData: FlGridData(
         show: true,
         drawVerticalLine: true,
-        horizontalInterval: 1,
-        verticalInterval: 1,
         getDrawingHorizontalLine: (value) {
           return const FlLine(
             color: Colors.white10,
@@ -443,7 +353,7 @@ class _LineChartSample extends State<LineChartSample> {
           sideTitles: SideTitles(
             showTitles: true,
             reservedSize: 30,
-            interval: calculateBottomInterval(),
+            interval: 1,
             getTitlesWidget: bottomTitleWidgets,
           ),
         ),
@@ -473,8 +383,18 @@ class _LineChartSample extends State<LineChartSample> {
           ),
           barWidth: 5,
           isStrokeCapRound: true,
-          dotData: const FlDotData(
-            show: false,
+          dotData: FlDotData(
+            show: true, // Habilitar la visualización de los puntos
+            getDotPainter: (spot, percent, barData, index) {
+              // Personaliza cómo se dibuja cada punto aquí
+              return FlDotCirclePainter(
+                radius:
+                    4, // El radio del punto, ajusta esto para hacer puntos más grandes
+                color: Colors.white, // Color del centro del punto
+                strokeWidth: 2, // El grosor del borde del punto
+                strokeColor: Colors.black, // Color del borde del punto
+              );
+            },
           ),
           belowBarData: BarAreaData(
             show: true,
