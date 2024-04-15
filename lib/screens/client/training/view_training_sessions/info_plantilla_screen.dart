@@ -361,7 +361,6 @@ class CreateProgramScreenState extends State<CreateProgramScreen> {
         description: description,
         picture: thumbnailImage,
         etiquetas: etiquetas);
-
     navigateNext(templateId);
   }
 

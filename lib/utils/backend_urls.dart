@@ -17,7 +17,7 @@ const banUserUrl = '${url}usuarios/ban';
 
 // Plantilla (Template) Management
 const plantillaPostsUrl = '${url}plantillaPosts';
-
+const plantillaPostCreateUrl = '${url}plantillaPosts/create';
 //Duplicar plantilla
 const duplicarPlantillaUrl = '${url}duplicatePlantilla';
 

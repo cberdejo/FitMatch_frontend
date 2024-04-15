@@ -191,6 +191,7 @@ class _NuevaMedidaScreen extends State<NuevaMedidaScreen> {
     setState(() => isLoading = true);
     if (_checkIfAllControllersAreEmpty()) {
       showToast(context, "Rellena al menos un campo", exitoso: false);
+      setState(() => isLoading = false);
     } else {
       Medidas medidas = _getMedidaByControllers();
       List<Uint8List>? imagesBytes = [];

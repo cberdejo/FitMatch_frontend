@@ -95,7 +95,8 @@ class PlantillaPostsMethods {
     Uint8List? picture,
     required List<Etiqueta> etiquetas,
   }) async {
-    var request = http.MultipartRequest('POST', Uri.parse(plantillaPostsUrl));
+    var request =
+        http.MultipartRequest('POST', Uri.parse(plantillaPostCreateUrl));
     if (picture != null) {
       var pictureStream = http.ByteStream(Stream.value(picture));
       var pictureLength = picture.length;
@@ -108,8 +109,10 @@ class PlantillaPostsMethods {
     request.fields['description'] = description;
     request.fields['user_id'] = userId.toString();
     addEtiquetasToRequest(request, etiquetas);
+
     var response = await request.send();
-    if (response.statusCode == 200) {
+
+    if (response.statusCode == 201) {
       var responseBody = await response.stream.bytesToString();
       var decodedResponse = jsonDecode(responseBody);
       return decodedResponse['template_id'];

@@ -150,6 +150,19 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
     });
   }
 
+  _editExercise(Ejercicios exercis) async {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => CreateExerciseScreen(
+              user: widget.user,
+              exercise: exercis,
+            ),
+          ),
+        )
+        .then((value) => _resetAndLoadExercises());
+  }
+
   _deleteExercise(Ejercicios exercise) async {
     try {
       bool deleted =
@@ -230,6 +243,8 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
       exercises
           .clear(); // Limpia la lista actual antes de cargar nuevos resultados
       _currentPage = 1; // Restablece a la primera página
+      _hasMore = true;
+
       _loadExercises();
     });
   }
@@ -251,11 +266,15 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
           MouseRegion(
             cursor: SystemMouseCursors.click,
             child: GestureDetector(
-              onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CreateExerciseScreen(
-                  user: widget.user,
-                ),
-              )),
+              onTap: () => Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                      builder: (context) => CreateExerciseScreen(
+                        user: widget.user,
+                      ),
+                    ),
+                  )
+                  .then((value) => _resetAndLoadExercises()),
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -307,6 +326,7 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
                     ejercicio: exercises[index],
                     isSelected: isSelected,
                     order: selectedExercisesOrder[exercises[index].exerciseId],
+                    onEditExercise: () => _editExercise(exercises[index]),
                     onDeletedExercise: () => _deleteExercise(exercises[index]),
                     onSelectedEjercicio: (exercise) =>
                         _selectExercise(exercise),
@@ -402,6 +422,7 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
             exercises
                 .clear(); // Limpia los ejercicios actuales para cargar los nuevos filtrados
             _currentPage = 1; // Restablece la paginación
+            _hasMore = true;
             _loadExercises(); // Carga los ejercicios con los nuevos filtros
           },
           items: [
@@ -471,6 +492,8 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
             exercises
                 .clear(); // Limpia los ejercicios actuales para cargar los nuevos filtrados
             _currentPage = 1; // Restablece la paginación
+            _hasMore = true;
+
             _resetAndLoadExercises();
           },
           items: [

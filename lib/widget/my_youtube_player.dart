@@ -10,6 +10,7 @@ class MyYoutubePlayer extends StatefulWidget {
 
 class MyYoutubePlayerState extends State<MyYoutubePlayer> {
   late YoutubePlayerController _controller;
+  String? _errorMessage;
 
   String? extractYoutubeVideoId(String url) {
     final Uri uri = Uri.tryParse(url) ?? Uri();
@@ -36,24 +37,36 @@ class MyYoutubePlayerState extends State<MyYoutubePlayer> {
     super.initState();
     final videoId = extractYoutubeVideoId(widget.uri);
     if (videoId == null) {
-      throw Exception('No se ha podido extraer el videoId de ${widget.uri}');
+      setState(() {
+        _errorMessage = 'URL no válida. No se puede cargar el video.';
+      });
+    } else {
+      _controller = YoutubePlayerController(
+        params: const YoutubePlayerParams(
+          showControls: true,
+          showFullscreenButton: false,
+          loop: true,
+        ),
+      );
+      _controller.setFullScreenListener(
+        (isFullScreen) {},
+      );
+      _controller.loadVideoById(videoId: videoId);
+      // _controller.cueVideoById(videoId: videoId);
     }
-    _controller = YoutubePlayerController(
-      params: const YoutubePlayerParams(
-        showControls: true,
-        showFullscreenButton: false,
-        loop: true,
-      ),
-    );
-    _controller.setFullScreenListener(
-      (isFullScreen) {},
-    );
-    _controller.loadVideoById(videoId: videoId);
-    // _controller.cueVideoById(videoId: videoId);
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_errorMessage != null) {
+      return Center(
+        child: Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+      );
+    }
+
+    if (_controller == null) {
+      return const Center(child: CircularProgressIndicator());
+    }
     return Container(
       constraints: const BoxConstraints(maxWidth: 800),
       margin: const EdgeInsets.all(8),
