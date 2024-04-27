@@ -785,10 +785,12 @@ class ViewProfileState extends State<ViewProfileScreen> {
               return null;
             },
           ),
+          const SizedBox(height: 16),
           ElevatedButton(
             onPressed: createAdmin,
             child: const Text('Crear Administrador'),
           ),
+          const SizedBox(height: 16),
         ],
       ),
     );

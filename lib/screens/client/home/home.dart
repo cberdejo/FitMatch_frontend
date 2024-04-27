@@ -65,7 +65,7 @@ class _HomeScreen extends State<HomeScreen> {
             ),
             const SizedBox(height: 10.0),
             CardOption(
-              title: "Historial de entrenos",
+              title: "Historial de entrenamientos",
               description:
                   "Pulsa aquí para visualizar tus entrenamientos y analíticas correspondientes",
               icon: Icons.calendar_month,
@@ -74,7 +74,7 @@ class _HomeScreen extends State<HomeScreen> {
             ),
             const Divider(),
             CardOption(
-              title: "Toma de medidas y progreso",
+              title: "Toma de medidas corporales",
               description:
                   "Pulsa aquí para apuntar mediciones, subir fotos y ver el progreso a lo largo del tiempo",
               icon: Icons.fitness_center,

@@ -85,25 +85,28 @@ class LineChartZoomState extends State<LineChartZoom> {
   }
 
   List<_ChartData> getChartData() {
-    return widget.registroSet.map((registro) {
-      double value = 0.0;
-      switch (widget.registerTypeId) {
-        case 4: // AMRAP: usar 'reps'
-          value = 1.0; // Asumiendo un valor estático para simplificar
-          break;
-        case 5: // Tiempo
-          value = registro.time?.toDouble() ?? 0.0;
-          break;
-        case 6: // Rango Tiempo
-          value = (registro.time?.toDouble() ?? 0.0) *
-              (registro.weight?.toDouble() ?? 0.0);
-          break;
-        default: // Otro tipo: usar 'weight'
-          value = registro.weight?.toDouble() ?? 0.0;
-          break;
-      }
-      return _ChartData(registro.timestamp, value);
-    }).toList();
+    return widget.registroSet
+        .map((registro) {
+          double value = 0.0;
+          switch (widget.registerTypeId) {
+            case 4: // AMRAP: usar 'reps'
+              value = 1.0; // Asumiendo un valor estático para simplificar
+              break;
+            case 5: // Tiempo
+              value = registro.time?.toDouble() ?? 0.0;
+              break;
+            case 6: // Rango Tiempo
+              value = (registro.time?.toDouble() ?? 0.0) *
+                  (registro.weight?.toDouble() ?? 0.0);
+              break;
+            default: // Otro tipo: usar 'weight'
+              value = registro.weight?.toDouble() ?? 0.0;
+              break;
+          }
+          return _ChartData(registro.timestamp, value);
+        })
+        .where((spot) => spot.value > 0)
+        .toList();
   }
 
   @override
