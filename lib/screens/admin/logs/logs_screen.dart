@@ -25,16 +25,28 @@ class LogsScreenState extends State<LogsScreen>
 
   bool isLoading = false;
   late TabController _tabController;
+  int _currentPage = 1;
+  bool _hasMore = true;
+  final int _pageSize = 100;
 
   String filtroBusqueda = '';
   Timer? _debounce;
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
 
+    _scrollController.addListener(_loadMoreOnScroll);
     initLogs();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   void _onSearchChanged(String? text) {
@@ -44,8 +56,17 @@ class LogsScreenState extends State<LogsScreen>
         filtroBusqueda = text ?? '';
       });
 
-      initLogs();
+      initLogs(isRefresh: true);
     });
+  }
+
+  void _loadMoreOnScroll() {
+    if (_scrollController.position.pixels ==
+            _scrollController.position.maxScrollExtent &&
+        !isLoading &&
+        _hasMore) {
+      initLogs();
+    }
   }
 
   @override
@@ -56,20 +77,22 @@ class LogsScreenState extends State<LogsScreen>
         title: const Text('Plantillas de entrenamiento'),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(kToolbarHeight + 50),
-          child: Column(children: [
-            SearchWidget(
-              text: filtroBusqueda,
-              hintText: 'Filtrar por Ip',
-              onChanged: (text) => _onSearchChanged(text),
-            ),
-            TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Registros'),
-                Tab(text: 'Ips bloqueadas'),
-              ],
-            ),
-          ]),
+          child: Column(
+            children: [
+              SearchWidget(
+                text: filtroBusqueda,
+                hintText: 'Filtrar por Ip',
+                onChanged: (text) => _onSearchChanged(text),
+              ),
+              TabBar(
+                controller: _tabController,
+                tabs: const [
+                  Tab(text: 'Registros'),
+                  Tab(text: 'Ips bloqueadas'),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       body: SafeArea(
@@ -84,30 +107,35 @@ class LogsScreenState extends State<LogsScreen>
     );
   }
 
-  Widget _buildProgramList(
-    BuildContext context,
-    String tipo,
-  ) {
+  Widget _buildProgramList(BuildContext context, String tipo) {
     List<Registro> lista = tipo == 'logs' ? logs : bloqueos;
 
-    Widget liswViewWithListItem = ListView(
+    Widget listViewWithListItem = ListView.builder(
       physics: const AlwaysScrollableScrollPhysics(),
-      children: [
-        ...lista.map((template) => _buildListItem(template, tipo)).toList(),
-      ],
+      itemCount: lista.length + (_hasMore ? 1 : 0),
+      itemBuilder: (context, index) {
+        if (index == lista.length) {
+          return _hasMore
+              ? const Center(child: CircularProgressIndicator())
+              : const Center(child: Text("Estás al día"));
+        }
+        return _buildListItem(lista[index], tipo);
+      },
+      controller: _scrollController,
     );
+
     return kIsWeb
-        ? liswViewWithListItem
+        ? listViewWithListItem
         : LiquidPullToRefresh(
-            onRefresh: initLogs,
+            onRefresh: () async {
+              await initLogs(isRefresh: true);
+            },
             color: Theme.of(context).colorScheme.primary,
-            child: liswViewWithListItem);
+            child: listViewWithListItem,
+          );
   }
 
-  Widget _buildListItem(
-    Registro registro,
-    String tipo,
-  ) {
+  Widget _buildListItem(Registro registro, String tipo) {
     if (tipo == 'logs') {
       Log log = registro as Log;
       return Card(
@@ -184,25 +212,64 @@ class LogsScreenState extends State<LogsScreen>
     }
   }
 
-  Future<void> initLogs() async {
+  Future<void> initLogs({bool isRefresh = false}) async {
+    if (isLoading) return;
+    if (isRefresh) {
+      setState(() {
+        _currentPage = 1;
+        _hasMore = true;
+        logs.clear();
+        bloqueos.clear();
+      });
+    }
+
     setState(() {
       isLoading = true;
     });
-    try {
-      List<Log> logs = await LogsMethods().getLogs(widget.user.user_id as int,
-          ip: filtroBusqueda != '' ? filtroBusqueda : null);
 
-      List<Bloqueo> bloqueos = await LogsMethods().getBloqueos(
-          widget.user.user_id as int,
-          ip: filtroBusqueda != '' ? filtroBusqueda : null);
+    try {
+      List<Log> fetchedLogs = await LogsMethods().getLogs(
+        widget.user.user_id as int,
+        page: _currentPage,
+        pageSize: _pageSize,
+        ip: filtroBusqueda.isNotEmpty ? filtroBusqueda : null,
+      );
+
+      List<Bloqueo> fetchedBloqueos = await LogsMethods().getBloqueos(
+        widget.user.user_id as int,
+        page: _currentPage,
+        pageSize: _pageSize,
+        ip: filtroBusqueda.isNotEmpty ? filtroBusqueda : null,
+      );
+
       if (mounted) {
         setState(() {
-          this.logs = logs;
-          this.bloqueos = bloqueos;
+          if (fetchedLogs.isNotEmpty || fetchedBloqueos.isNotEmpty) {
+            _currentPage++;
+            logs.addAll(fetchedLogs);
+            bloqueos.addAll(fetchedBloqueos);
+            if (fetchedLogs.length < _pageSize &&
+                fetchedBloqueos.length < _pageSize) {
+              _hasMore = false;
+            }
+          } else {
+            _hasMore = false;
+          }
         });
       }
     } catch (e) {
       print(e);
+      if (mounted) {
+        setState(() {
+          _hasMore = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 }

@@ -26,7 +26,7 @@ class _ViewTrainersScreenState extends State<ViewTrainersScreen> {
   bool isLoading = false; // Inicializar como falso para el estado inicial
   bool hasMore = true;
   int currentPage = 1;
-  int pageSize = 10;
+  int pageSize = 100;
 
   //FILTROS
   Timer? _debounce;

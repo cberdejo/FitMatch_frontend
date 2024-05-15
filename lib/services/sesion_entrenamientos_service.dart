@@ -142,7 +142,7 @@ class EjerciciosMethods {
     int? idGrupoMuscular,
     int? idMaterial,
     int page = 1,
-    int pageSize = 20,
+    int pageSize = 100,
   }) async {
     // Comienza con la URL base y los parámetros de paginación.
     String url = "$ejerciciosUrl?page=$page&pageSize=$pageSize";
@@ -196,7 +196,7 @@ class EjerciciosMethods {
   Future<List<Ejercicios>> getEjerciciosByGrupoMuscular({
     required int grupoMuscularId,
     int? page = 1,
-    int? pageSize = 20,
+    int? pageSize = 100,
   }) async {
     String url =
         "$ejerciciosUrl/grupoMuscular/$grupoMuscularId?page=$page&pageSize=$pageSize";

@@ -158,6 +158,20 @@ class ManageUserScreenState extends State<ManageUserScreen>
         children: [
           DropdownButton<String>(
             value: selectedRole,
+            iconEnabledColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.primary,
+            dropdownColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.background,
+            focusColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.background,
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.primary,
+            ),
             onChanged: (value) {
               setState(() {
                 selectedRole = value!;
@@ -174,6 +188,20 @@ class ManageUserScreenState extends State<ManageUserScreen>
           ),
           DropdownButton<String>(
             value: selectedFilterType,
+            iconEnabledColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.onPrimary
+                : Theme.of(context).colorScheme.primary,
+            dropdownColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.background,
+            focusColor: Theme.of(context).brightness == Brightness.light
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.background,
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.light
+                  ? Theme.of(context).colorScheme.onPrimary
+                  : Theme.of(context).colorScheme.primary,
+            ),
             onChanged: (value) {
               setState(() {
                 selectedFilterType = value!;

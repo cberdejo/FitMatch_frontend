@@ -121,7 +121,7 @@ Future<void> deleteComment(num commentId) async {
 }
 
 Future<List<Review>> getAllReviews(num templateId,
-    {int? page = 1, int? pageSize = 10, String? reviewOrder}) async {
+    {int? page = 1, int? pageSize = 100, String? reviewOrder}) async {
   String url = "$reviewsUrl?templateId=$templateId";
 
   if (page != null) {

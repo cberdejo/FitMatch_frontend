@@ -5,12 +5,15 @@ import 'package:fit_match/utils/backend_urls.dart';
 import 'dart:async';
 
 class LogsMethods {
-  Future<List<Log>> getLogs(int userId, {String? ip}) async {
+  Future<List<Log>> getLogs(int userId,
+      {String? ip, int page = 1, int pageSize = 100}) async {
     try {
-      String url = "$logsUrl/$userId ";
+      String url = "$logsUrl/$userId?page=$page&pageSize=$pageSize";
+
       if (ip != null) {
-        url += "?ip=$ip";
+        url += "&ip=$ip";
       }
+
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode == 200) {
@@ -27,9 +30,15 @@ class LogsMethods {
     }
   }
 
-  Future<List<Bloqueo>> getBloqueos(int userId, {String? ip}) async {
+  Future<List<Bloqueo>> getBloqueos(int userId,
+      {String? ip, int page = 1, int pageSize = 100}) async {
     try {
-      String url = "$bloqueosUrl/$userId ";
+      String url = "$bloqueosUrl/$userId?page=$page&pageSize=$pageSize";
+
+      if (ip != null) {
+        url += "&ip=$ip";
+      }
+
       if (ip != null) {
         url += "?ip=$ip";
       }

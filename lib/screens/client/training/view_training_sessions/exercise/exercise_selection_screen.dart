@@ -29,7 +29,7 @@ class ExecriseSelectionState extends State<ExecriseSelectionScreen> {
   bool _isLoading = false;
   int _currentPage = 1;
   bool _hasMore = true;
-  final int _pageSize = 20;
+  final int _pageSize = 100;
 
   final ScrollController _scrollController = ScrollController();
 

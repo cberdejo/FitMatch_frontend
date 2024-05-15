@@ -4,11 +4,8 @@ import 'package:fit_match/models/ejercicios.dart';
 import 'package:fit_match/models/registros.dart';
 import 'package:fit_match/utils/dimensions.dart';
 import 'package:fit_match/utils/utils.dart';
-import 'package:fit_match/widget/expandable_text.dart';
-import 'package:fit_match/widget/imagen_detailed.dart';
 import 'package:fit_match/widget/number_input_field.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 class RegisterCard extends StatefulWidget {
   final EjerciciosDetalladosAgrupados ejercicioDetalladoAgrupado;
