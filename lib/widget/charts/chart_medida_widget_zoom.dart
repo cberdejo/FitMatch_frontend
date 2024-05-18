@@ -1,5 +1,4 @@
 import 'package:fit_match/models/medidas.dart';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
@@ -77,9 +76,10 @@ class ChartMedidaState extends State<ChartMedidaZoom> {
           interval: interval,
         ),
         primaryYAxis: NumericAxis(
-            labelFormat: '{value}${widget.unit}',
-            numberFormat: NumberFormat.decimalPattern(),
-            interactiveTooltip: const InteractiveTooltip(enable: false)),
+          labelFormat: '{value}${widget.unit}',
+          numberFormat: NumberFormat.decimalPattern(),
+          interactiveTooltip: const InteractiveTooltip(enable: false),
+        ),
         zoomPanBehavior: _zoomPanBehavior,
         tooltipBehavior: _tooltipBehavior,
         series: <CartesianSeries<StatMedida, DateTime>>[
@@ -91,18 +91,7 @@ class ChartMedidaState extends State<ChartMedidaZoom> {
             color: Theme.of(context).colorScheme.primary, // Color de la línea
             markerSettings: const MarkerSettings(
                 isVisible: true), // Muestra los puntos en la serie
-
             dataLabelSettings: const DataLabelSettings(isVisible: false),
-
-            // onPointTap: (ChartPointDetails details) {
-            //   final int pointIndex = details.pointIndex!;
-            //   // Custom Tooltip content
-            //   final RegistroSet registro = widget.registroSet[pointIndex];
-            //   final String tooltipText = _buildTooltipText(registro);
-            //   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            //     content: Text(tooltipText),
-            //   ));
-            // }
           ),
         ],
       ),

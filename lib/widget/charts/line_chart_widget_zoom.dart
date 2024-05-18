@@ -22,6 +22,7 @@ class LineChartZoom extends StatefulWidget {
 
 class LineChartZoomState extends State<LineChartZoom> {
   late List<_ChartData> chartData;
+  late List<RegistroSet> filteredRegistroSet;
   late DateTimeIntervalType intervalType;
   late double interval;
   late ZoomPanBehavior _zoomPanBehavior;
@@ -31,24 +32,26 @@ class LineChartZoomState extends State<LineChartZoom> {
   void initState() {
     super.initState();
     chartData = getChartData();
+    filteredRegistroSet = getFilteredRegistroSet();
     _tooltipBehavior = TooltipBehavior(
-        enable: true,
-        builder: (context, dynamic data, dynamic point, int pointIndex,
-            int seriesIndex) {
-          final RegistroSet registro = widget.registroSet[pointIndex];
-          final String tooltipText = _buildTooltipText(registro);
-          return Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent,
-              borderRadius: BorderRadius.circular(5),
-            ),
-            child: Text(
-              tooltipText,
-              style: const TextStyle(color: Colors.white),
-            ),
-          );
-        });
+      enable: true,
+      builder: (context, dynamic data, dynamic point, int pointIndex,
+          int seriesIndex) {
+        final RegistroSet registro = filteredRegistroSet[pointIndex];
+        final String tooltipText = _buildTooltipText(registro);
+        return Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.blueAccent,
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: Text(
+            tooltipText,
+            style: const TextStyle(color: Colors.white),
+          ),
+        );
+      },
+    );
     _zoomPanBehavior = ZoomPanBehavior(
       enablePinching: true,
       enableDoubleTapZooming: true,
@@ -90,7 +93,7 @@ class LineChartZoomState extends State<LineChartZoom> {
           double value = 0.0;
           switch (widget.registerTypeId) {
             case 4: // AMRAP: usar 'reps'
-              value = 1.0; // Asumiendo un valor estático para simplificar
+              value = registro.reps?.toDouble() ?? 0.0;
               break;
             case 5: // Tiempo
               value = registro.time?.toDouble() ?? 0.0;
@@ -107,6 +110,28 @@ class LineChartZoomState extends State<LineChartZoom> {
         })
         .where((spot) => spot.value > 0)
         .toList();
+  }
+
+  List<RegistroSet> getFilteredRegistroSet() {
+    return widget.registroSet.where((registro) {
+      double value = 0.0;
+      switch (widget.registerTypeId) {
+        case 4: // AMRAP: usar 'reps'
+          value = registro.reps?.toDouble() ?? 0.0;
+          break;
+        case 5: // Tiempo
+          value = registro.time?.toDouble() ?? 0.0;
+          break;
+        case 6: // Rango Tiempo
+          value = (registro.time?.toDouble() ?? 0.0) *
+              (registro.weight?.toDouble() ?? 0.0);
+          break;
+        default: // Otro tipo: usar 'weight'
+          value = registro.weight?.toDouble() ?? 0.0;
+          break;
+      }
+      return value > 0;
+    }).toList();
   }
 
   @override
@@ -148,13 +173,17 @@ class LineChartZoomState extends State<LineChartZoom> {
   }
 
   String _buildTooltipText(RegistroSet data) {
-    // Asumiendo que 'fromKgToLbs' maneja correctamente valores nulos o esto se ajusta antes de la llamada
-    final weightText = widget.system == 'metrico'
-        ? (data.weight ?? 0.0)
-        : fromKgToLbs(data.weight ?? 0.0);
-    final system = widget.system == 'metrico'
-        ? 'kg'
-        : 'lbs'; // Asegúrate de que esta variable 'system' esté definida correctamente en tu código
+    final num weightValue = data.weight ?? 0.0;
+    final String weightText;
+
+    if (widget.system == 'metrico') {
+      weightText = weightValue.toStringAsFixed(1);
+    } else {
+      double lbs = fromKgToLbs(weightValue);
+      weightText = lbs.toStringAsFixed(1);
+    }
+
+    final String system = widget.system == 'metrico' ? 'kg' : 'lbs';
     String text = "${data.reps ?? 0} repes x $weightText $system";
 
     switch (widget.registerTypeId) {
