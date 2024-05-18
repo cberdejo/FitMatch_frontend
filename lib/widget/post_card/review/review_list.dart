@@ -1,6 +1,5 @@
 import 'package:expandable_text/expandable_text.dart';
 import 'package:fit_match/models/user.dart';
-import 'package:fit_match/widget/expandable_text.dart';
 import 'package:fit_match/widget/imagen_detailed.dart';
 import 'package:fit_match/widget/post_card/star.dart';
 import 'package:flutter/material.dart';
@@ -244,12 +243,12 @@ class ReviewListWidgetState extends State<ReviewListWidget> {
     if (widget.fullScreen) {
       return Scaffold(
         appBar: AppBar(
-          title: Text(
-            'Reviews',
+          title: const Text(
+            'Reseñas',
             style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.primary),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
             textAlign: TextAlign.center,
           ),
         ),

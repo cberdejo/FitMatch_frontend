@@ -218,10 +218,27 @@ class UserMethods {
   }
 
   Future<List<User>> getAllUsers(int userId,
-      {int page = 1, int pageSize = 100}) async {
+      {int page = 1,
+      int pageSize = 100,
+      String? filterType,
+      String? filterValue,
+      String? role}) async {
     try {
-      final response = await http
-          .get(Uri.parse('$usuariosUrl/$userId?page=$page&pageSize=$pageSize'));
+      final url = Uri.parse('$usuariosUrl/$userId');
+      final body = {
+        'page': page,
+        'pageSize': pageSize,
+        if (filterType != null) 'filterType': filterType,
+        if (filterValue != null) 'filterValue': filterValue,
+        if (role != null) 'role': role,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(body),
+      );
+
       if (response.statusCode == 200) {
         final List<dynamic> jsonData = json.decode(response.body) as List;
         return jsonData.map((jsonItem) => User.fromJson(jsonItem)).toList();

@@ -28,10 +28,11 @@ class CustomToggleButtonsState extends State<CustomToggleButtons> {
   @override
   Widget build(BuildContext context) {
     return ToggleButtons(
-      borderColor: Colors.grey,
+      borderColor: Theme.of(context).colorScheme.onBackground,
       fillColor: Theme.of(context).colorScheme.primary,
-      selectedBorderColor: Theme.of(context).primaryColor,
-      selectedColor: Theme.of(context).colorScheme.primary,
+      selectedBorderColor: Theme.of(context).colorScheme.onBackground,
+      selectedColor: Theme.of(context).colorScheme.onPrimary,
+      color: Theme.of(context).colorScheme.onBackground,
       borderRadius: BorderRadius.circular(8),
       //spacing: 4,
       isSelected: _selection,
